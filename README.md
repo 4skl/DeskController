@@ -1,5 +1,5 @@
 # DeskController
-Maping a keyboard and a mouse on a game controller, using GLFW, with an intuitive overlay
+Maping a keyboard and a mouse on a gamepad, using GLFW, with an intuitive overlay
 
 This project replace [this one](https://github.com/4skl/GameControllerWindowsAdapter), with a cleaner code, build, various gamepad support and more.
 Windows and Unix support is targetted, for now, only Windows is supported.
