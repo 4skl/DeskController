@@ -1,0 +1,3 @@
+Add something to make release version with shaders embeeded in strings in includes instead of .fs or .gs files (like a python script) that :
+    - copy project
+    - (CLchar *) readShaderFile(shader_path) in .c files by shader_path slugified name in ..
