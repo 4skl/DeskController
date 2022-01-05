@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#include <overlay.h>
+
 #define FPS 60
 
 //force use dedicated graphic card //https://stackoverflow.com/questions/16823372/forcing-machine-to-use-dedicated-graphics-card
@@ -56,40 +58,27 @@ float triangleVertices[] = {
 float joystickL[2];
 float joystickR[2];
 bool smallGap = true;
-GLFWvidmode deskInfo;
 
-struct WindowPercentage{
-    float height;
-    float width;
+OverlaySettings overlay_defaultSettings = {
+    .widthPercent=25, 
+    .heightPercent=10, 
+    .backgroundColor={.r=1, .g=0.90, .b=0.28},
+    .foregroundColor={.r=0.45, .g=0.38, .b=1},
+    .side=TOP
 };
-struct WindowPercentage windowPercentage = {0.1f, 0.3f};
 
 int main(void)
 {
-    GLFWwindow* overlayWindow;
-
     /* Initialize the library */
     if (!glfwInit())
         return -1;
+
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* deskInfo = glfwGetVideoMode(monitor);
     
-    
-    /* get desktop informations */
-    deskInfo = *glfwGetVideoMode(glfwGetPrimaryMonitor());
-    printf("w : %i h : %i\n", deskInfo.width, deskInfo.height);
+    OverlaySettings overlaySettings = overlay_defaultSettings;
 
-    /* Set options */
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-    glfwWindowHint(GLFW_DECORATED, GL_FALSE);
-    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GL_TRUE);
-    glfwWindowHint(GLFW_FLOATING, GL_TRUE);
-
-    /* Create a windowed mode window and its OpenGL context */
-    overlayWindow = glfwCreateWindow((int)((float)deskInfo.width)*windowPercentage.width, 3, "DeskController", NULL, NULL); //glfwGetPrimaryMonitor() as 3rd argument for fullscreen
+    GLFWwindow* overlayWindow = createOverlayWindow(monitor, &overlaySettings);
 
     if (!overlayWindow)
     {
@@ -101,134 +90,21 @@ int main(void)
     glfwMakeContextCurrent(overlayWindow);
 
     /* INIT GLEW */
-    glewExperimental = GL_TRUE;
+    glewExperimental = GL_TRUE; //? move right after glfw init ?
     glewInit();
 
-    
-    glfwSetWindowPos(overlayWindow, deskInfo.width/2 - ((int)((float)deskInfo.width)*windowPercentage.width)/2, 0);
+    UsableShaderData* overlayBackground = (UsableShaderData*) malloc(sizeof(UsableShaderData));
+    createOverlayBackground(overlayBackground);
 
-
-    /* Create Shaders */
-
-    //Vertex Shader
-    const GLchar * vertexShaderCode = "#version 150 core\n" //? change version ?
-        "in vec2 position;\n"
-        "in float k;\n"
-        "uniform vec3 ptColor;\n"
-        "out vec3 PtColor;\n"
-        "void main(){\n"
-        "   PtColor = k * ptColor;\n"
-        "   gl_Position = vec4(position, 0.0, 1.0);\n"
-        "}";
-        
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderCode, NULL);
-    glCompileShader(vertexShader);
-
-    //* check compilation errors
-    {
-        GLint status;
-        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &status);
-        if(!status){
-            char buffer[512];
-            glGetShaderInfoLog(vertexShader, 512, NULL, buffer);
-            fprintf(stderr, "Vertex Shader compilation error : %s\n", buffer);
-            return -1;
-        }
-    }
-
-
-    //Fragment Shader
-    const GLchar * fragmentShaderCode = "#version 150 core\n"
-        "in vec3 PtColor;\n"
-        "out vec4 outColor;\n"
-        //"uniform vec3 triangleColor;\n"
-        "void main(){\n"
-        "   outColor = vec4(PtColor, 1.0);\n"
-        "}";
-
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderCode, NULL);
-    glCompileShader(fragmentShader);
-
-    //* check compilation errors
-    {
-        GLint status;
-        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &status);
-        if(!status){
-            char buffer[512];
-            glGetShaderInfoLog(fragmentShader, 512, NULL, buffer);
-            fprintf(stderr, "Fragment Shader compilation error : %s\n", buffer);
-            return -1;
-        }
-    }
-
-    //Create shader program
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-
-    glBindFragDataLocation(shaderProgram, 0, "outColor");
-
-    glLinkProgram(shaderProgram);
-    //not needed, but delete shaders as them have been linked into the program :
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);  
-
-    //* check compilation errors
-    {
-        GLint status;
-        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &status);
-        if(!status){
-            char buffer[512];
-            glGetProgramInfoLog(shaderProgram, 512, NULL, buffer);
-            fprintf(stderr, "Linking Shader program error : %s\n", buffer);
-            return -1;
-        }
-    }
-
-    glUseProgram(shaderProgram);
-
-    /* Shader datas */
-    GLfloat vertices[] = {
-        0.0f, -0.5f, 1.0f, // Vertex 1 (X, Y, k)
-        -0.5f, 0.5f, 0.5f, // Vertex 2 (X, Y, k)
-        0.5f, 0.5f, 0.0f, // Vertex 3 (X, Y, k)
-    };
-
-    GLuint vbo, vao;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    //Link vertex datas to the program
-    GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (GLvoid*)0); //3rd arg : normalize input if not floating point depending on the format; 4th arg : stride; 5th arg : offset 
-    glEnableVertexAttribArray(posAttrib);
-
-    GLint kAttrib = glGetAttribLocation(shaderProgram, "k");
-    glVertexAttribPointer(kAttrib, 1, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (GLvoid*) (2*sizeof(GLfloat))); //3rd arg : normalize input if not floating point depending on the format; 4th arg : stride; 5th arg : offset 
-    glEnableVertexAttribArray(kAttrib);
-
+    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.widthPercent)/100, (deskInfo->height*overlaySettings.heightPercent)/100);
    
     //glfwSetKeyCallback(window, key_callback);
     //glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetJoystickCallback(joystick_callback);
     glfwSetWindowSizeCallback(overlayWindow, window_size_callback);
     //glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
-    
-    /*unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);*/
-    
-    // useless cause already called glBindVertexArray(vao);
 
-    GLint uniColor = glGetUniformLocation(shaderProgram, "ptColor");
+    GLint bgColorUniform = glGetUniformLocation(overlayBackground->shaderProgram, "color");
 
     
     GLFWgamepadstate lastState;
@@ -241,9 +117,12 @@ int main(void)
         //drawView();
         
         glClearColor(0.1f, 0.2f, 0.3f, 0.4f);
-        glUniform3f(uniColor, tr, tv, tb);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
+        
+        //Draw background
+        glUniform4f(bgColorUniform, tr, tv, tb, 1.0);
+        glBindVertexArray(overlayBackground->vao);
+        glUseProgram(overlayBackground->shaderProgram);
+        overlayBackground->drawFunction();
         /* Swap front and back buffers */
         glfwSwapBuffers(overlayWindow);
 
@@ -275,11 +154,10 @@ int main(void)
             if(state.buttons[GLFW_GAMEPAD_BUTTON_X] && state.buttons[GLFW_GAMEPAD_BUTTON_X] != lastState.buttons[GLFW_GAMEPAD_BUTTON_X]){
                 //need timing
                 smallGap = !smallGap;
-                printf("%i %i\n", (int)((float)deskInfo.width)*windowPercentage.width, (int)((float)deskInfo.height)*windowPercentage.height);
                 if(smallGap){
-                    glfwSetWindowSize(overlayWindow, (int)((float)deskInfo.width)*windowPercentage.width, 3);
+                    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.widthPercent)/100, 3);
                 }else{
-                    glfwSetWindowSize(overlayWindow, (int)((float)deskInfo.width)*windowPercentage.width, (int)((float)deskInfo.height)*windowPercentage.height);
+                    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.widthPercent)/100, (deskInfo->height*overlaySettings.heightPercent)/100);
                 }
             }
             lastState = state;

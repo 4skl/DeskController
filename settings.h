@@ -1,0 +1,4 @@
+#ifndef HEADER_SETTINGS
+#define HEADER_SETTINGS
+
+#endif
