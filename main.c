@@ -163,6 +163,9 @@ int main(void)
                 overlaySettings.foregroundColor.g = tg;
                 overlaySettings.foregroundColor.b = tb;
             }
+            if(abs(joystickL[0]) > 0.05  || abs(joystickL[1]) > 0.05){
+                printf("part : %i \n", (int) (((atan(joystickL[0]/-joystickL[1])+PI/2)/radians(45.0)))); //TODO
+            }
             //printf("%f %f %f\n", tr, tv, tb);
             if (state.buttons[GLFW_GAMEPAD_BUTTON_A])
             {
@@ -177,7 +180,7 @@ int main(void)
                     colorSelected = NONE;
                 }
             }
-            if(state.buttons[GLFW_GAMEPAD_BUTTON_X] && state.buttons[GLFW_GAMEPAD_BUTTON_X] != lastState.buttons[GLFW_GAMEPAD_BUTTON_X]){
+            if(state.buttons[GLFW_GAMEPAD_BUTTON_GUIDE] && state.buttons[GLFW_GAMEPAD_BUTTON_GUIDE] != lastState.buttons[GLFW_GAMEPAD_BUTTON_GUIDE]){
                 //need timing
                 smallGap = !smallGap;
                 if(smallGap){
