@@ -12,7 +12,7 @@
 __declspec(dllexport) unsigned long NvOptimusEnablement = 1;
 __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 
-float tr,tv,tb;
+float tr,tg,tb;
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -58,12 +58,14 @@ float triangleVertices[] = {
 float joystickL[2];
 float joystickR[2];
 bool smallGap = true;
+enum SelectPart {NONE = 0, BG, FG};
+enum SelectPart colorSelected = NONE;
 
 OverlaySettings overlay_defaultSettings = {
     .widthPercent=25, 
     .heightPercent=10, 
-    .backgroundColor={.r=1, .g=0.90, .b=0.28},
-    .foregroundColor={.r=0.45, .g=0.38, .b=1},
+    .backgroundColor={.r=0.45, .g=0.38, .b=1},
+    .foregroundColor={.r=1, .g=0.90, .b=0.28},
     .side=TOP
 };
 
@@ -93,10 +95,10 @@ int main(void)
     glewExperimental = GL_TRUE; //? move right after glfw init ?
     glewInit();
 
+    //...glfwSetCursorPos(overlayWindow, 0, 0);
+
     UsableShaderData* overlayBackground = (UsableShaderData*) malloc(sizeof(UsableShaderData));
     createOverlayBackground(overlayBackground);
-
-    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.widthPercent)/100, (deskInfo->height*overlaySettings.heightPercent)/100);
    
     //glfwSetKeyCallback(window, key_callback);
     //glfwSetCursorPosCallback(window, cursor_position_callback);
@@ -104,7 +106,8 @@ int main(void)
     glfwSetWindowSizeCallback(overlayWindow, window_size_callback);
     //glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
 
-    GLint bgColorUniform = glGetUniformLocation(overlayBackground->shaderProgram, "color");
+    GLint bgColorUniform = glGetUniformLocation(overlayBackground->shaderProgram, "backgroundColor");
+    GLint fgColorUniform = glGetUniformLocation(overlayBackground->shaderProgram, "foregroundColor");
 
     
     GLFWgamepadstate lastState;
@@ -116,10 +119,11 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
         //drawView();
         
-        glClearColor(0.1f, 0.2f, 0.3f, 0.4f);
+        //glClearColor(0.1f, 0.2f, 0.3f, 0.4f);
         
         //Draw background
-        glUniform4f(bgColorUniform, tr, tv, tb, 1.0);
+        glUniform4f(bgColorUniform, overlaySettings.backgroundColor.r, overlaySettings.backgroundColor.g, overlaySettings.backgroundColor.b, 0.8);
+        glUniform4f(fgColorUniform, overlaySettings.foregroundColor.r, overlaySettings.foregroundColor.g, overlaySettings.foregroundColor.b, 1);
         glBindVertexArray(overlayBackground->vao);
         glUseProgram(overlayBackground->shaderProgram);
         overlayBackground->drawFunction();
@@ -144,12 +148,30 @@ int main(void)
             joystickR[1] = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
 
             tr = (joystickL[0]+1)/2;
-            tv = (joystickL[1]+1)/2;
+            tg = (joystickL[1]+1)/2;
             tb = (joystickR[0]+1)/2;
+            if(colorSelected == BG){
+                overlaySettings.backgroundColor.r = tr;
+                overlaySettings.backgroundColor.g = tg;
+                overlaySettings.backgroundColor.b = tb;
+            }else if(colorSelected == FG){
+                overlaySettings.foregroundColor.r = tr;
+                overlaySettings.foregroundColor.g = tg;
+                overlaySettings.foregroundColor.b = tb;
+            }
             //printf("%f %f %f\n", tr, tv, tb);
             if (state.buttons[GLFW_GAMEPAD_BUTTON_A])
             {
                 printf("A pressed L(%f,%f) R(%f,%f)\n", state.axes[GLFW_GAMEPAD_AXIS_LEFT_X], state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y]);
+            }
+            if(state.buttons[GLFW_GAMEPAD_BUTTON_B] && state.buttons[GLFW_GAMEPAD_BUTTON_B] != lastState.buttons[GLFW_GAMEPAD_BUTTON_B]){
+                if(colorSelected == NONE){
+                    colorSelected = BG;
+                }else if(colorSelected == BG){
+                    colorSelected = FG;
+                }else{
+                    colorSelected = NONE;
+                }
             }
             if(state.buttons[GLFW_GAMEPAD_BUTTON_X] && state.buttons[GLFW_GAMEPAD_BUTTON_X] != lastState.buttons[GLFW_GAMEPAD_BUTTON_X]){
                 //need timing

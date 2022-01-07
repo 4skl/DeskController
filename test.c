@@ -56,6 +56,7 @@ float triangleVertices[] = {
 float joystickL[2];
 float joystickR[2];
 bool smallGap = true;
+
 GLFWvidmode deskInfo;
 
 struct WindowPercentage{

@@ -18,6 +18,7 @@ GLFWwindow* createOverlayWindow(GLFWmonitor* monitor, OverlaySettings* settings)
     glfwWindowHint(GLFW_DECORATED, GL_FALSE);
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GL_TRUE);
     glfwWindowHint(GLFW_FLOATING, GL_TRUE);
+    //TODO uncomment when glfw 3.4 released glfwWindowHint(GLFW_MOUSE_PASSTHROUGH, GLFW_TRUE);
 
     /* Create a windowed mode window and its OpenGL context */
     overlayWindow = glfwCreateWindow((deskInfo->width*settings->widthPercent)/100, 3, "DeskController", NULL, NULL); //glfwGetPrimaryMonitor() as 3rd argument for fullscreen
