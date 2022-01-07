@@ -21,16 +21,16 @@ GLFWwindow* createOverlayWindow(GLFWmonitor* monitor, OverlaySettings* settings)
     //TODO uncomment when glfw 3.4 released glfwWindowHint(GLFW_MOUSE_PASSTHROUGH, GLFW_TRUE);
 
     /* Create a windowed mode window and its OpenGL context */
-    overlayWindow = glfwCreateWindow((deskInfo->width*settings->widthPercent)/100, 3, "DeskController", NULL, NULL); //glfwGetPrimaryMonitor() as 3rd argument for fullscreen
+    overlayWindow = glfwCreateWindow((deskInfo->width*settings->sizeFactor)/100, 3, "DeskController", NULL, NULL); //glfwGetPrimaryMonitor() as 3rd argument for fullscreen
 
-    glfwSetWindowPos(overlayWindow, deskInfo->width/2 - (deskInfo->width*settings->widthPercent)/100/2, 0);
+    glfwSetWindowPos(overlayWindow, deskInfo->width/2 - (deskInfo->width*settings->sizeFactor)/100/2, 0);
 
     return overlayWindow;
 }
 
 
 void drawOverlayBackground(){
-    glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 8*3, GL_UNSIGNED_INT, 0);
 }
 
 GLuint compileOverlayBackground(){
@@ -79,20 +79,28 @@ void createOverlayBackground(UsableShaderData* shaderData){
     shaderData->shaderProgram = compileOverlayBackground();
 
 
+    GLfloat a = 2/(SQRT_2+1);
     GLfloat overlay_backgroundShapeVertices[] = {
-        -1.0, 1.0,
-        1.0, 1.0,
-        -0.3, -1.0,
-        0.3, -1.0,
-        -0.3, 1.0,
-        0.3, 1.0,
+        0, 0,
+        -a/2, 1,
+        a/2, 1,
+        1, a/2,
+        1, -a/2,
+        a/2, -1,
+        -a/2, -1,
+        -1, -a/2,
+        -1, a/2,
     };
 
     GLuint overlay_backgroundShapeElements[] = {
-        0, 2, 4,
-        2, 3, 4,
-        3, 4, 5,
-        1, 3, 5
+        0, 1, 2,
+        0, 2, 3,
+        0, 3, 4,
+        0, 4, 5,
+        0, 5, 6,
+        0, 6, 7,
+        0, 7, 8,
+        0, 8, 1
     };
 
     //Load vertices

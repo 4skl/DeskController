@@ -5,6 +5,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h> 
 
+#define SQRT_2 1.4142135623730951
+
 struct ColorRGBf {
     float r;
     float g;

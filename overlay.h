@@ -10,8 +10,7 @@
 #include <common.h>
 
 struct OverlaySettings{
-    uint8_t widthPercent;
-    uint8_t heightPercent;
+    uint8_t sizeFactor;
     ColorRGBf backgroundColor;
     ColorRGBf foregroundColor;
     Side side;

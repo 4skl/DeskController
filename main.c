@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include <overlay.h>
 
@@ -62,10 +63,9 @@ enum SelectPart {NONE = 0, BG, FG};
 enum SelectPart colorSelected = NONE;
 
 OverlaySettings overlay_defaultSettings = {
-    .widthPercent=25, 
-    .heightPercent=10, 
-    .backgroundColor={.r=0.45, .g=0.38, .b=1},
-    .foregroundColor={.r=1, .g=0.90, .b=0.28},
+    .sizeFactor=10,
+    .backgroundColor={.r=0.3, .g=0.6, .b=0.9},
+    .foregroundColor={.r=0.45, .g=0.38, .b=0.4},
     .side=TOP
 };
 
@@ -108,6 +108,8 @@ int main(void)
 
     GLint bgColorUniform = glGetUniformLocation(overlayBackground->shaderProgram, "backgroundColor");
     GLint fgColorUniform = glGetUniformLocation(overlayBackground->shaderProgram, "foregroundColor");
+    GLint joystickLUniform = glGetUniformLocation(overlayBackground->shaderProgram, "joystickL");
+    GLint joystickRUniform = glGetUniformLocation(overlayBackground->shaderProgram, "joystickR");
 
     
     GLFWgamepadstate lastState;
@@ -119,9 +121,11 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
         //drawView();
         
-        //glClearColor(0.1f, 0.2f, 0.3f, 0.4f);
+        //glClearColor(0.4f, 0.2f, 0.3f, 0.4f);
         
         //Draw background
+        glUniform2f(joystickLUniform, joystickL[0], -joystickL[1]);
+        glUniform2f(joystickRUniform, joystickR[0], -joystickR[1]);
         glUniform4f(bgColorUniform, overlaySettings.backgroundColor.r, overlaySettings.backgroundColor.g, overlaySettings.backgroundColor.b, 0.8);
         glUniform4f(fgColorUniform, overlaySettings.foregroundColor.r, overlaySettings.foregroundColor.g, overlaySettings.foregroundColor.b, 1);
         glBindVertexArray(overlayBackground->vao);
@@ -177,9 +181,9 @@ int main(void)
                 //need timing
                 smallGap = !smallGap;
                 if(smallGap){
-                    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.widthPercent)/100, 3);
+                    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100, 3);
                 }else{
-                    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.widthPercent)/100, (deskInfo->height*overlaySettings.heightPercent)/100);
+                    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100, (deskInfo->width*overlaySettings.sizeFactor)/100);
                 }
             }
             lastState = state;
