@@ -7,7 +7,7 @@
 
 #include <overlay.h>
 
-#define FPS 60
+#define FPS 144
 
 //force use dedicated graphic card //https://stackoverflow.com/questions/16823372/forcing-machine-to-use-dedicated-graphics-card
 __declspec(dllexport) unsigned long NvOptimusEnablement = 1;
@@ -98,6 +98,8 @@ int main(void)
     glewExperimental = GL_TRUE; //? move right after glfw init ?
     glewInit();
 
+    //printf("GLFW Version : %s\n", glfwGetVersionString());
+
     //...glfwSetCursorPos(overlayWindow, 0, 0);
 
     /*UsableShaderData* overlayBackground = (UsableShaderData*) malloc(sizeof(UsableShaderData));
@@ -120,12 +122,7 @@ int main(void)
     GLint overlayWheel1_segmentEnabled = glGetUniformLocation(overlayWheel1->shaderProgram, "segmentEnabled");
     GLint overlayWheel1_segmentColor = glGetUniformLocation(overlayWheel1->shaderProgram, "segmentColor");
 
-    GLuint wheel1DivCount = 8;
-    glUniform1ui(overlayWheel1_divCount, wheel1DivCount);
-    glUniform2f(overlayWheel1_circleMinMax, 0.5, 0.8);
-    glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
-    glUniform4f(overlayWheel1_backgroundColor, 0.3, 0.0, 0.0, 0.5);
-    glUniform2f(overlayWheel1_relativeWheelSize, 0.25, 0.25);
+    glUniform2f(overlayWheel1_relativeWheelSize, 0.5, 0.5);
     GLboolean segmentEnabled = false;
     glUniform4f(overlayWheel1_segmentColor, 0.0, 0.7, 0.9, 0.8);
 
@@ -160,18 +157,41 @@ int main(void)
         glBindVertexArray(overlayBackground->vao);
         overlayBackground->drawFunction();*/
 
-        if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5){
+        if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
             glUseProgram(overlayWheel1->shaderProgram);
-            //float angle = atan2(v.y/v.x) + PI; // angle from the point [-1, 0] in reverse clock cycle
-            float angle = atan2f(joystickL[1],joystickL[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
-            GLuint wheel1Div = ((GLuint)(angle / (2*PI/wheel1DivCount))) % wheel1DivCount;
-            printf("Part : %i\n", wheel1Div);
-            glUniform1i(overlayWheel1_segmentEnabled, segmentEnabled);
-            glUniform1ui(overlayWheel1_part, wheel1Div);
-            glUniform2f(overlayWheel1_screenDimension, displayDim.width, displayDim.height); // todo improve
-            glUniform2f(overlayWheel1_center, displayDim.width/2, displayDim.height/2); // todo improve
             glBindVertexArray(overlayWheel1->vao);
-            overlayWheel1->drawFunction();
+            if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5){
+                GLuint wheelDivCount = 10;
+                //float angle = atan2(v.y/v.x) + PI; // angle from the point [-1, 0] in reverse clock cycle
+                float angle = atan2f(joystickL[1],joystickL[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
+                GLuint wheelDiv = ((GLuint)(angle / (2*PI/wheelDivCount))) % wheelDivCount;
+                printf("Part1 : %i\n", wheelDiv);
+                glUniform1ui(overlayWheel1_divCount, wheelDivCount);
+                glUniform2f(overlayWheel1_circleMinMax, 0.3, 0.6);
+                glUniform1i(overlayWheel1_segmentEnabled, segmentEnabled);
+                glUniform1ui(overlayWheel1_part, wheelDiv);
+                glUniform2f(overlayWheel1_screenDimension, displayDim.width, displayDim.height); // todo improve
+                glUniform2f(overlayWheel1_center, displayDim.width/2, displayDim.height/2); // todo improve
+                glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
+                glUniform4f(overlayWheel1_backgroundColor, 0.3, 0.0, 0.0, 0.5);
+                overlayWheel1->drawFunction();
+            }
+
+            if(fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
+                GLuint wheelDivCount = 20;
+                float angle = atan2f(joystickR[1],joystickR[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
+                GLuint wheelDiv = ((GLuint)(angle / (2*PI/wheelDivCount))) % wheelDivCount;
+                printf("Part2 : %i\n", wheelDiv);
+                glUniform1ui(overlayWheel1_divCount, wheelDivCount);
+                glUniform2f(overlayWheel1_circleMinMax, 0.6, 1);
+                glUniform1i(overlayWheel1_segmentEnabled, segmentEnabled);
+                glUniform1ui(overlayWheel1_part, wheelDiv);
+                glUniform2f(overlayWheel1_screenDimension, displayDim.width, displayDim.height); // todo improve
+                glUniform2f(overlayWheel1_center, displayDim.width/2, displayDim.height/2); // todo improve
+                glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
+                glUniform4f(overlayWheel1_backgroundColor, 0.1, 0.6, 0.8, 0.5);
+                overlayWheel1->drawFunction();
+            }
         }
 
 

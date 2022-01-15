@@ -27,7 +27,7 @@ void main(){
         if(segmentEnabled && (fract(partF) < segmentAngleRatio/2 || 1-fract(partF) < segmentAngleRatio/2)){//draw borders of wheel // todo correct
             outColor = segmentColor;
         }else if(part == uint(partF)){
-            float wheelMask = max(min(1-dCenter, 1)-0.1, 0); //...
+            float wheelMask = (dCenter - circleMinMax.x)/(circleMinMax.y-circleMinMax.x);
             outColor = wheelMask * partColor + (1-wheelMask) * backgroundColor;
         }else{
             outColor = backgroundColor;
