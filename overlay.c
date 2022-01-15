@@ -15,7 +15,7 @@ GLFWwindow* createOverlayWindow(GLFWmonitor* monitor, OverlaySettings* settings)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-    glfwWindowHint(GLFW_DECORATED, GL_FALSE);
+    //glfwWindowHint(GLFW_DECORATED, GL_FALSE);
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GL_TRUE);
     glfwWindowHint(GLFW_FLOATING, GL_TRUE);
     //TODO uncomment when glfw 3.4 released glfwWindowHint(GLFW_MOUSE_PASSTHROUGH, GLFW_TRUE);
@@ -29,8 +29,12 @@ GLFWwindow* createOverlayWindow(GLFWmonitor* monitor, OverlaySettings* settings)
 }
 
 
+
+
+
+/** Background **/
 void drawOverlayBackground(){
-    glDrawElements(GL_TRIANGLES, 8*3, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 4*3, GL_UNSIGNED_INT, 0);
 }
 
 GLuint compileOverlayBackground(){
@@ -82,25 +86,17 @@ void createOverlayBackground(UsableShaderData* shaderData){
     GLfloat a = 2/(SQRT_2+1);
     GLfloat overlay_backgroundShapeVertices[] = {
         0, 0,
-        -a/2, 1,
-        a/2, 1,
-        1, a/2,
-        1, -a/2,
-        a/2, -1,
-        -a/2, -1,
-        -1, -a/2,
-        -1, a/2,
+        1, -1,
+        1, 1,
+        -1, 1,
+        -1, -1
     };
 
     GLuint overlay_backgroundShapeElements[] = {
         0, 1, 2,
         0, 2, 3,
         0, 3, 4,
-        0, 4, 5,
-        0, 5, 6,
-        0, 6, 7,
-        0, 7, 8,
-        0, 8, 1
+        0, 4, 1,
     };
 
     //Load vertices
@@ -131,6 +127,102 @@ void createOverlayBackground(UsableShaderData* shaderData){
     shaderData->drawFunction=drawOverlayBackground;
 }
 
+/** Wheels **/
+void drawOverlayWheel(){
+    glDrawElements(GL_TRIANGLES, 4*3, GL_UNSIGNED_INT, 0);
+}
+
+GLuint compileOverlayWheel(){
+    //Load shaders
+    GLchar * bgVertexShaderSource = readShaderFile("shaders/overlay_wheel.vs");
+    if(bgVertexShaderSource == NULL) fprintf(stderr, "Can't read shaders/overlay_wheel.vs\n");
+    GLuint bgVertexShader = createShader(bgVertexShaderSource, GL_VERTEX_SHADER);
+    
+
+    GLchar * bgFragmentShaderSource = readShaderFile("shaders/overlay_wheel.fs");
+    if(bgFragmentShaderSource == NULL) fprintf(stderr, "Can't read shaders/overlay_wheel.fs\n");
+    GLuint bgFragmentShader = createShader(bgFragmentShaderSource, GL_FRAGMENT_SHADER);
+
+
+    //Create shader program
+    GLuint shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, bgVertexShader);
+    glAttachShader(shaderProgram, bgFragmentShader);
+
+    glBindFragDataLocation(shaderProgram, 0, "outColor");
+
+    glLinkProgram(shaderProgram);
+
+    //* check compilation errors
+    {
+        GLint status;
+        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &status);
+        if(!status){
+            char buffer[512];
+            glGetProgramInfoLog(shaderProgram, 512, NULL, buffer);
+            fprintf(stderr, "Linking Shader program error : %s\n", buffer);
+        }
+    }
+
+    //not needed, but delete shaders as them have been linked into the program :
+    glDeleteShader(bgVertexShader);
+    free(bgVertexShaderSource);
+
+    glDeleteShader(bgFragmentShader);
+    free(bgFragmentShaderSource);
+
+    return shaderProgram;
+}
+
+void createOverlayWheel(UsableShaderData* shaderData){
+    shaderData->shaderProgram = compileOverlayWheel();
+    
+    GLfloat overlay_wheelShapeVertices[] = {
+        0, 0,
+        1, -1,
+        1, 1,
+        -1, 1,
+        -1, -1
+    };
+
+    GLuint overlay_wheelShapeElements[] = {
+        0, 1, 2,
+        0, 2, 3,
+        0, 3, 4,
+        0, 4, 1,
+    };
+
+    //Load vertices
+    //GLuint* vao = &(shaderData->vao);
+    GLuint vbo, vao;
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(overlay_wheelShapeVertices), overlay_wheelShapeVertices, GL_STATIC_DRAW);
+
+    //Load elements
+    GLuint ebo;
+    glGenBuffers(1, &ebo);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(overlay_wheelShapeElements), overlay_wheelShapeElements, GL_STATIC_DRAW);
+
+    //Link vertex datas to the program
+    GLint posAttrib = glGetAttribLocation(shaderData->shaderProgram, "position");
+    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (GLvoid*)0); //3rd arg : normalize input if not floating point depending on the format; 4th arg : stride; 5th arg : offset 
+    glEnableVertexAttribArray(posAttrib);
+    
+    glUseProgram(shaderData->shaderProgram);
+    shaderData->vao = vao;
+    shaderData->drawFunction=drawOverlayWheel;
+}
+
+
+
+//todo
 void drawOverlay(GLFWwindow* overlayWindow, OverlaySettings* settings, UsableShaderData shaders[], GLuint shadersCount){
     /* Make the window's context current */
     //glfwMakeContextCurrent(overlayWindow);

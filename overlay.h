@@ -23,6 +23,10 @@ void drawOverlayBackground();
 GLuint compileOverlayBackground();
 void createOverlayBackground(UsableShaderData* shaderData);
 
+void drawOverlayWheel();
+GLuint compileOverlayWheel();
+void createOverlayWheel(UsableShaderData* shaderData);
+
 void drawOverlay(GLFWwindow* overlayWindow, OverlaySettings* settings, UsableShaderData shaders[], GLuint shadersCount);
 
 #endif
