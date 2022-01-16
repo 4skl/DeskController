@@ -1,4 +1,4 @@
-#version 330 core
+#version 450 core
 
 uniform uint part;
 uniform vec2 screenDimension;

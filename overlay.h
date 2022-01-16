@@ -27,6 +27,10 @@ void drawOverlayWheel();
 GLuint compileOverlayWheel();
 void createOverlayWheel(UsableShaderData* shaderData);
 
+void drawOverlayScroll();
+GLuint compileOverlayScroll();
+void createOverlayScroll(UsableShaderData* shaderData);
+
 void drawOverlay(GLFWwindow* overlayWindow, OverlaySettings* settings, UsableShaderData shaders[], GLuint shadersCount);
 
 #endif
