@@ -126,8 +126,7 @@ int main(void)
     int dispSize[2] = {(deskInfo->width*overlaySettings.sizeFactor)/100, (deskInfo->width*overlaySettings.sizeFactor)/100};//todo move otherwere to take into account resize and improve
     UsableShaderData* overlayWheel1 = (UsableShaderData*) malloc(sizeof(UsableShaderData));
     createOverlayWheel(overlayWheel1);
-    GLint overlayWheel1_screenDimension = glGetUniformLocation(overlayWheel1->shaderProgram, "screenDimension");
-    GLint overlayWheel1_relativeWheelSize = glGetUniformLocation(overlayWheel1->shaderProgram, "relativeWheelSize");
+    GLint overlayWheel1_wheelDimension = glGetUniformLocation(overlayWheel1->shaderProgram, "wheelDimension");
     GLint overlayWheel1_divCount = glGetUniformLocation(overlayWheel1->shaderProgram, "divCount");
     GLint overlayWheel1_center = glGetUniformLocation(overlayWheel1->shaderProgram, "center");
     GLint overlayWheel1_circleMinMax = glGetUniformLocation(overlayWheel1->shaderProgram, "circleMinMax");
@@ -136,15 +135,17 @@ int main(void)
     GLint overlayWheel1_part = glGetUniformLocation(overlayWheel1->shaderProgram, "part");
     GLint overlayWheel1_segmentEnabled = glGetUniformLocation(overlayWheel1->shaderProgram, "segmentEnabled");
     GLint overlayWheel1_segmentColor = glGetUniformLocation(overlayWheel1->shaderProgram, "segmentColor");
+    GLint overlayWheel1_partGradient = glGetUniformLocation(overlayWheel1->shaderProgram, "partGradient");
 
-    glUniform2f(overlayWheel1_relativeWheelSize, 0.5, 0.5);
-    glUniform4f(overlayWheel1_segmentColor, 0.0, 0.7, 0.9, 0.8);
+    glUniform1i(overlayWheel1_partGradient, true);
+    glUniform4f(overlayWheel1_segmentColor, 0.0, 1, 0.7, 0.8);
     GLboolean segmentEnabled = false;
 
     /** Scroll **/
     UsableShaderData* overlayScroll1 = (UsableShaderData*) malloc(sizeof(UsableShaderData));
     createOverlayScroll(overlayScroll1);
     GLint overlayScroll1_scrollDimension = glGetUniformLocation(overlayScroll1->shaderProgram, "scrollDimension");
+    GLint overlayScroll1_horizontal = glGetUniformLocation(overlayScroll1->shaderProgram, "horizontal");
     GLint overlayScroll1_divCount = glGetUniformLocation(overlayScroll1->shaderProgram, "divCount");
     GLint overlayScroll1_bottomLeft = glGetUniformLocation(overlayScroll1->shaderProgram, "bottomLeft");
     GLint overlayScroll1_partColor = glGetUniformLocation(overlayScroll1->shaderProgram, "partColor");
@@ -152,10 +153,11 @@ int main(void)
     GLint overlayScroll1_part = glGetUniformLocation(overlayScroll1->shaderProgram, "part");
     GLint overlayScroll1_segmentEnabled = glGetUniformLocation(overlayScroll1->shaderProgram, "segmentEnabled");
     GLint overlayScroll1_segmentColor = glGetUniformLocation(overlayScroll1->shaderProgram, "segmentColor");
+    GLint overlayScroll1_partGradient = glGetUniformLocation(overlayScroll1->shaderProgram, "partGradient");
 
-    glUniform4f(overlayScroll1_segmentColor, 0.0, 0.7, 0.9, 0.8);
-    glUniform4f(overlayScroll1_partColor, 0.87, 0.17, 0.85, 1);
-    glUniform4f(overlayScroll1_backgroundColor, 0.1, 0.6, 0.8, 0.5);
+
+    glUniform4f(overlayScroll1_segmentColor, 0.0, 1, 0.7, 0.8);
+    //glUniform4f(overlayScroll1_backgroundColor, 0, 0, 0, 1);
 
     //glfwSetKeyCallback(window, key_callback);
     //glfwSetCursorPosCallback(window, cursor_position_callback);
@@ -169,8 +171,8 @@ int main(void)
     /*glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);*/
     glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glBlendFunc(GL_ONE, GL_ONE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(overlayWindow))
     {
@@ -178,7 +180,7 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
         //drawView();
         
-        //glClearColor(0.4f, 0.2f, 0.3f, 0.4f);
+        //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         
 
         //Draw background
@@ -189,59 +191,76 @@ int main(void)
         glUniform4f(fgColorUniform, overlaySettings.foregroundColor.r, overlaySettings.foregroundColor.g, overlaySettings.foregroundColor.b, 1);
         glBindVertexArray(overlayBackground->vao);
         overlayBackground->drawFunction();*/
-        
-        if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
+
+        if(triggerL != -1 || triggerR != -1){
+            glUseProgram(overlayScroll1->shaderProgram);
+            glBindVertexArray(overlayScroll1->vao);
+            
+            glUniform1i(overlayScroll1_segmentEnabled, segmentEnabled);
+            if(triggerR != -1){
+                GLuint scrollDivCount = 4;
+                GLuint scrollDiv = scrollDivCount - ((GLuint) ceilf((triggerR+1)/2*scrollDivCount));
+                printf("%f Rtrig part : %i\n", triggerR, scrollDiv);
+                glUniform1i(overlayScroll1_partGradient, true);
+                glUniform1i(overlayScroll1_horizontal, true);
+                glUniform2f(overlayScroll1_scrollDimension, displayDim.width, displayDim.height/5);
+                glUniform2f(overlayScroll1_bottomLeft, 0, displayDim.height-displayDim.height/5);
+                glUniform1ui(overlayScroll1_divCount, scrollDivCount);
+                glUniform1ui(overlayScroll1_part, scrollDiv);
+                glUniform4f(overlayScroll1_partColor, 0.87, 0.17, 0.85, 1);
+
+                overlayScroll1->drawFunction();
+            }
+
+            if(triggerL != -1){ //at 0 cause like that or physically broken ?
+                GLuint scrollDivCount = 2;
+                GLuint scrollDiv = scrollDivCount - ((GLuint) ceilf((triggerL+1)/2*scrollDivCount));
+                printf("%f Ltrig part : %i\n", triggerL, scrollDiv);
+                glUniform1i(overlayScroll1_partGradient, false);
+                glUniform1i(overlayScroll1_horizontal, false);
+                glUniform2f(overlayScroll1_scrollDimension, displayDim.width, displayDim.width);
+                glUniform2f(overlayScroll1_bottomLeft, 0, 0);
+                glUniform1ui(overlayScroll1_divCount, scrollDivCount);
+                glUniform1ui(overlayScroll1_part, scrollDiv);
+
+                overlayScroll1->drawFunction();
+            }
+        }
+
+         if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
             glUseProgram(overlayWheel1->shaderProgram);
             glBindVertexArray(overlayWheel1->vao);
+
+            glUniform2f(overlayWheel1_wheelDimension, displayDim.width, displayDim.width);
+            glUniform2f(overlayWheel1_center, displayDim.width/2, displayDim.width/2);
+            glUniform1i(overlayWheel1_segmentEnabled, segmentEnabled);
             if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5){
-                GLuint wheelDivCount = 10;
+                GLuint wheelDivCount = 8;
                 //float angle = atan2(v.y/v.x) + PI; // angle from the point [-1, 0] in reverse clock cycle
                 float angle = atan2f(joystickL[1],joystickL[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
                 GLuint wheelDiv = ((GLuint)(angle / (2*PI/wheelDivCount))) % wheelDivCount;
                 printf("Part1 : %i\n", wheelDiv);
                 glUniform1ui(overlayWheel1_divCount, wheelDivCount);
-                glUniform2f(overlayWheel1_circleMinMax, 0.3, 0.6);
-                glUniform1i(overlayWheel1_segmentEnabled, segmentEnabled);
+                glUniform2f(overlayWheel1_circleMinMax, 0.2, 0.5);
                 glUniform1ui(overlayWheel1_part, wheelDiv);
-                glUniform2f(overlayWheel1_screenDimension, displayDim.width, displayDim.height); // todo improve
-                glUniform2f(overlayWheel1_center, displayDim.width/2, displayDim.height/2); // todo improve
                 glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
-                glUniform4f(overlayWheel1_backgroundColor, 0.3, 0.0, 0.0, 0.5);
+                glUniform4f(overlayWheel1_backgroundColor, 0.3, 0.0, 0.0, 1);
                 overlayWheel1->drawFunction();
             }
 
             if(fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
-                GLuint wheelDivCount = 20;
+                GLuint wheelDivCount = 16;
                 float angle = atan2f(joystickR[1],joystickR[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
                 GLuint wheelDiv = ((GLuint) (angle / (2*PI/wheelDivCount))) % wheelDivCount;
                 printf("Part2 : %i\n", wheelDiv);
                 glUniform1ui(overlayWheel1_divCount, wheelDivCount);
-                glUniform2f(overlayWheel1_circleMinMax, 0.6, 1);
-                glUniform1i(overlayWheel1_segmentEnabled, segmentEnabled);
+                glUniform2f(overlayWheel1_circleMinMax, 0.5, 1);
                 glUniform1ui(overlayWheel1_part, wheelDiv);
-                glUniform2f(overlayWheel1_screenDimension, displayDim.width, displayDim.height); // todo improve
-                glUniform2f(overlayWheel1_center, displayDim.width/2, displayDim.height/2); // todo improve
                 glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
-                glUniform4f(overlayWheel1_backgroundColor, 0.1, 0.6, 0.8, 0.5);
+                glUniform4f(overlayWheel1_backgroundColor, 0.1, 0.6, 0.8, 1);
                 overlayWheel1->drawFunction();
             }
         }
-
-        if(triggerR != -1){
-            glUseProgram(overlayScroll1->shaderProgram);
-            glBindVertexArray(overlayScroll1->vao);
-            
-            GLuint scrollDivCount = 10;
-            GLuint scrollDiv = ((GLuint) ((triggerR+1)/2*(scrollDivCount-0.00001)));
-            printf("%f Ltrig part : %i\n", triggerR, scrollDiv);
-            
-            glUniform2f(overlayScroll1_scrollDimension, displayDim.width/5, displayDim.height/3);
-            glUniform2f(overlayScroll1_bottomLeft, displayDim.width-displayDim.width/5, (displayDim.height-displayDim.height/3)/2);
-            glUniform1ui(overlayScroll1_divCount, scrollDiv);
-
-            overlayScroll1->drawFunction();
-        }
-
 
         /* Swap front and back buffers */
         glfwSwapBuffers(overlayWindow);
@@ -304,7 +323,7 @@ int main(void)
                 if(smallGap){
                     glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100, 3);
                 }else{
-                    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100, (deskInfo->width*overlaySettings.sizeFactor)/100);
+                    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100*3/5, (deskInfo->width*overlaySettings.sizeFactor)/100);
                 }
             }
             lastState = state;
