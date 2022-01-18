@@ -5,6 +5,17 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h> 
 
+#define PI 3.141592653589793
+#define SQRT_2 1.4142135623730951
+#define radians(v) (v / 180.0 * PI)
+
+
+struct Dim2D {
+    float width;
+    float height;
+};
+typedef struct Dim2D Dim2D;
+
 struct ColorRGBf {
     float r;
     float g;

@@ -10,8 +10,7 @@
 #include <common.h>
 
 struct OverlaySettings{
-    uint8_t widthPercent;
-    uint8_t heightPercent;
+    uint8_t sizeFactor;
     ColorRGBf backgroundColor;
     ColorRGBf foregroundColor;
     Side side;
@@ -23,6 +22,14 @@ GLFWwindow* createOverlayWindow(GLFWmonitor* monitor, OverlaySettings* settings)
 void drawOverlayBackground();
 GLuint compileOverlayBackground();
 void createOverlayBackground(UsableShaderData* shaderData);
+
+void drawOverlayWheel();
+GLuint compileOverlayWheel();
+void createOverlayWheel(UsableShaderData* shaderData);
+
+void drawOverlayScroll();
+GLuint compileOverlayScroll();
+void createOverlayScroll(UsableShaderData* shaderData);
 
 void drawOverlay(GLFWwindow* overlayWindow, OverlaySettings* settings, UsableShaderData shaders[], GLuint shadersCount);
 
