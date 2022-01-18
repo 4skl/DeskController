@@ -12,6 +12,6 @@ The code is at it's begining, so nothing functional yet, please wait and notice 
 You need glew, opengl, glfw and gdi.
 
 ## Compiling on Windows (tested with MinGW-w64) :
-> gcc main.c -lglew32 -lglfw3 -lgdi32 -lopengl32 -o DeskController
-
-*makefile will be added soon
+> make
+Run :
+> ./DeskController.exe
