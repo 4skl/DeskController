@@ -13,5 +13,6 @@ You need glew, opengl, glfw and gdi.
 
 ## Compiling on Windows (tested with MinGW-w64) :
 > make
+
 Run :
 > ./DeskController.exe
