@@ -4,7 +4,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
-
+#include <ft2build.h>
+#include FT_FREETYPE_H
 #include <overlay.h>
 
 #define FPS 144
@@ -77,11 +78,20 @@ OverlaySettings overlay_defaultSettings = {
     .sizeFactor=20,
     .backgroundColor={.r=0.3, .g=0.6, .b=0.9},
     .foregroundColor={.r=0.45, .g=0.38, .b=0.4},
-    .side=TOP
+    .side=TOP,
 };
 
-int main(void)
+int main(int argc,char *argv[])
 {
+    
+
+    FT_Library  library;
+    
+    int error = FT_Init_FreeType( &library );
+    if ( error )
+    {
+        printf("Freetype lib init error"); 
+    }
     /* Initialize the library */
     if (!glfwInit())
         return -1;
