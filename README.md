@@ -6,6 +6,7 @@ Windows and Unix support is targetted, for now, only Windows is supported.
 
 # Disclaimer
 The code is at it's begining, so nothing functional yet, please wait and notice me if you are interested in it !
+see it's at this level of prototyping : ![desk controller demo gif](https://github.com/4skl/DeskController/blob/main/devlog/DeskController_WheelTest04.gif?raw=true)
 
 # Build & Depencies
 
