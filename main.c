@@ -92,6 +92,7 @@ int main(int argc,char *argv[])
     {
         printf("Freetype lib init error"); 
     }
+
     /* Initialize the library */
     if (!glfwInit())
         return -1;
