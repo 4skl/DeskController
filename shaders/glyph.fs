@@ -1,0 +1,13 @@
+#version 450 core
+
+in vec2 TexCoords;
+out vec4 outColor;
+
+uniform sampler2D text;
+uniform vec4 textColor;
+
+void main()
+{    
+    float sampled = texture(text, TexCoords).r; // /255 ? or .r useless
+    outColor = vec4(textColor) * sampled;
+}  

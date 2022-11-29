@@ -4,9 +4,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
-#include <ft2build.h>
-#include FT_FREETYPE_H
 #include <overlay.h>
+#include <draw_text.h>
 
 #define FPS 144
 
@@ -70,7 +69,7 @@ float triangleVertices[] = {
 float joystickL[2];
 float joystickR[2];
 float triggerL, triggerR;
-bool smallGap = true;
+bool smallGap = false;
 enum SelectPart {NONE = 0, BG, FG};
 enum SelectPart colorSelected = NONE;
 
@@ -83,22 +82,20 @@ OverlaySettings overlay_defaultSettings = {
 
 int main(int argc,char *argv[])
 {
-    
-
-    FT_Library  library;
-    
-    int error = FT_Init_FreeType( &library );
-    if ( error )
-    {
-        printf("Freetype lib init error"); 
-    }
-
-    /* Initialize the library */
+    /* Initialize the GLFW library */
     if (!glfwInit())
         return -1;
 
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+
     const GLFWvidmode* deskInfo = glfwGetVideoMode(monitor);
+
+    int width_mm, height_mm;
+    glfwGetMonitorPhysicalSize(monitor, &width_mm, &height_mm);
+    int dpix, dpiy;
+    dpix = ((float) deskInfo->width/width_mm)*25.4;
+    dpiy = ((float) deskInfo->height/height_mm)*25.4;
+    printf("DPI : w=%i, h=%i\n", dpix, dpiy);
     
     OverlaySettings overlaySettings = overlay_defaultSettings;
 
@@ -168,7 +165,17 @@ int main(int argc,char *argv[])
 
 
     glUniform4f(overlayScroll1_segmentColor, 0.0, 1, 0.7, 0.8);
-    //glUniform4f(overlayScroll1_backgroundColor, 0, 0, 0, 1);
+    //glUniform4f(overlayScroll1_backgroundColor, 1, 0, 0, 1);
+
+    /** Text **/
+    unsigned long text1[4] = {65UL, 0UL};/*66UL, 67UL,*/
+    CharacterList cl_text1 = genTextCharacters(text1, "fonts/OpenSans-Bold.ttf", 0, 64);
+    UsableShaderDataInput* overlayText1 = (UsableShaderDataInput*) malloc(sizeof(UsableShaderDataInput));
+    createText(overlayText1);
+    GLint overlayText1_textColor = glGetUniformLocation(overlayText1, "textColor");
+    GLint overlayText1_projection = glGetUniformLocation(overlayText1, "projection");
+
+    glUniform4f(overlayText1_textColor, 0, 1, 0, 1); //set text color to green
 
     //glfwSetKeyCallback(window, key_callback);
     //glfwSetCursorPosCallback(window, cursor_position_callback);
@@ -184,14 +191,21 @@ int main(int argc,char *argv[])
     glEnable(GL_BLEND);
     //glBlendFunc(GL_ONE, GL_ONE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    if(smallGap){
+        glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100, 3);
+    }else{
+        glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100*3/5, (deskInfo->width*overlaySettings.sizeFactor)/100);
+    }
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(overlayWindow))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
+
+        /***/
         //drawView();
         
-        //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         
 
         //Draw background
@@ -203,6 +217,7 @@ int main(int argc,char *argv[])
         glBindVertexArray(overlayBackground->vao);
         overlayBackground->drawFunction();*/
 
+        
         if(triggerL != -1 || triggerR != -1){
             glUseProgram(overlayScroll1->shaderProgram);
             glBindVertexArray(overlayScroll1->vao);
@@ -272,7 +287,16 @@ int main(int argc,char *argv[])
                 overlayWheel1->drawFunction();
             }
         }
-
+        
+        /* Draw Text */
+        //unsigned long text[4] = {65UL, 66UL, 67UL, 0UL};
+        ColorRGBAf textColor = {.r=0.f, .g=1.f, .b=0.f, .a=1.f};
+        /*glUseProgram(overlayText1->shaderProgram);
+        glUniform4f(overlayText1_projection, 0, width, 0, height);
+        overlayText1->drawFunction(&cl_text1);*/
+        drawTexturesText(text1, "fonts/OpenSans-Bold.ttf", 0, 100, 0, 0, textColor);
+        drawTexturesText(text1, "fonts/OpenSans-Bold.ttf", 0, 100, 50, 0, textColor);
+        
         /* Swap front and back buffers */
         glfwSwapBuffers(overlayWindow);
 

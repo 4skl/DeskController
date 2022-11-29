@@ -23,6 +23,14 @@ struct ColorRGBf {
 };
 typedef struct ColorRGBf ColorRGBf;
 
+struct ColorRGBAf {
+    float r;
+    float g;
+    float b;
+    float a;
+};
+typedef struct ColorRGBAf ColorRGBAf;
+
 enum Side {TOP, BOTTOM, LEFT, RIGHT};
 typedef enum Side Side;
 
@@ -32,5 +40,26 @@ struct UsableShaderData {
     void (*drawFunction)();
 };
 typedef struct UsableShaderData UsableShaderData;
+
+struct UsableShaderDataInput {
+    GLuint shaderProgram;
+    GLuint vao;
+    void (*drawFunction)(void*);
+};
+typedef struct UsableShaderDataInput UsableShaderDataInput;
+
+struct Character {
+    unsigned int textureID;  // ID handle of the glyph texture
+    Dim2D   size;       // Size of glyph
+    Dim2D   bearing;    // Offset from baseline to left/top of glyph
+    unsigned int advance;    // Offset to advance to next glyph
+};
+typedef struct Character Character;
+
+struct CharacterList {
+    Character * characters;
+    unsigned int count;
+};
+typedef struct CharacterList CharacterList;
 
 #endif

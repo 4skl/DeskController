@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "ft2build.h": "c"
+        "ft2build.h": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c"
     }
 }
