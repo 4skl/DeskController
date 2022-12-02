@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
-
 #include <overlay.h>
+#include <draw_text.h>
 
 #define FPS 144
 
@@ -69,7 +69,7 @@ float triangleVertices[] = {
 float joystickL[2];
 float joystickR[2];
 float triggerL, triggerR;
-bool smallGap = true;
+bool smallGap = false;
 enum SelectPart {NONE = 0, BG, FG};
 enum SelectPart colorSelected = NONE;
 
@@ -77,17 +77,25 @@ OverlaySettings overlay_defaultSettings = {
     .sizeFactor=20,
     .backgroundColor={.r=0.3, .g=0.6, .b=0.9},
     .foregroundColor={.r=0.45, .g=0.38, .b=0.4},
-    .side=TOP
+    .side=TOP,
 };
 
-int main(void)
+int main(int argc,char *argv[])
 {
-    /* Initialize the library */
+    /* Initialize the GLFW library */
     if (!glfwInit())
         return -1;
 
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+
     const GLFWvidmode* deskInfo = glfwGetVideoMode(monitor);
+
+    int width_mm, height_mm;
+    glfwGetMonitorPhysicalSize(monitor, &width_mm, &height_mm);
+    int dpix, dpiy;
+    dpix = ((float) deskInfo->width/width_mm)*25.4;
+    dpiy = ((float) deskInfo->height/height_mm)*25.4;
+    printf("DPI : w=%i, h=%i\n", dpix, dpiy);
     
     OverlaySettings overlaySettings = overlay_defaultSettings;
 
@@ -157,7 +165,38 @@ int main(void)
 
 
     glUniform4f(overlayScroll1_segmentColor, 0.0, 1, 0.7, 0.8);
-    //glUniform4f(overlayScroll1_backgroundColor, 0, 0, 0, 1);
+    //glUniform4f(overlayScroll1_backgroundColor, 1, 0, 0, 1);
+
+    /** Text **/
+    Atlas atlas = createTextAtlas(0x30C4UL, 0x30C4UL+1, "fonts/NotoSansJP-Bold.otf", 64, 0);
+    printf("atlas done w : %i, h : %i, tex : %i\n", atlas.width, atlas.height, atlas.tex);
+    
+    unsigned long* text1 = wcharToULong(L"      \u30C4");
+    DrawableText drawableText1 = createDrawableTextUsingAtlas(text1, &atlas, -0.1, 0, 1/230.0, 1/384.0);
+    
+    Atlas atlas2 = createTextAtlas(32, 1<<8, "fonts/NotoSansJP-Bold.otf", 64, 0);
+    unsigned long* text2 = wcharToULong(L"Gg¯\\_(__)_/¯");
+    DrawableText drawableText2 = createDrawableTextUsingAtlas(text2, &atlas2, -1, 0, 1/230.0, 1/384.0);
+    printf("drawableText done\n");
+    /*
+    for(unsigned int i = 0; i<drawableText.vertices_count;i++){
+        printf("%f, ", drawableText.vertices[i]);
+    }
+    printf("\n");
+
+    for(unsigned int i = 0; i<drawableText.elements_count;i++){
+        printf("%i, ", drawableText.elements[i]);
+    }
+    printf("\n");
+    */
+    /*CharacterList cl_text1 = genTextCharacters(text1, "fonts/OpenSans-Bold.ttf", 0, 64);
+    UsableShaderDataInput* overlayText1 = (UsableShaderDataInput*) malloc(sizeof(UsableShaderDataInput));
+    createText(overlayText1);
+    GLint overlayText1_textColor = glGetUniformLocation(overlayText1, "textColor");
+    GLint overlayText1_projection = glGetUniformLocation(overlayText1, "projection");
+
+    glUniform4f(overlayText1_textColor, 0, 1, 0, 1); //set text color to green
+    */
 
     //glfwSetKeyCallback(window, key_callback);
     //glfwSetCursorPosCallback(window, cursor_position_callback);
@@ -173,14 +212,21 @@ int main(void)
     glEnable(GL_BLEND);
     //glBlendFunc(GL_ONE, GL_ONE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    if(smallGap){
+        glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100, 3);
+    }else{
+        glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100*3/5, (deskInfo->width*overlaySettings.sizeFactor)/100);
+    }
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(overlayWindow))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
+
+        /***/
         //drawView();
         
-        //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         
 
         //Draw background
@@ -192,6 +238,7 @@ int main(void)
         glBindVertexArray(overlayBackground->vao);
         overlayBackground->drawFunction();*/
 
+        
         if(triggerL != -1 || triggerR != -1){
             glUseProgram(overlayScroll1->shaderProgram);
             glBindVertexArray(overlayScroll1->vao);
@@ -261,6 +308,20 @@ int main(void)
                 overlayWheel1->drawFunction();
             }
         }
+        
+        /* Draw Text */
+        //unsigned long text[4] = {65UL, 66UL, 67UL, 0UL};
+        /*glUseProgram(overlayText1->shaderProgram);
+        glUniform4f(overlayText1_projection, 0, width, 0, height);
+        overlayText1->drawFunction(&cl_text1);*/
+        //drawTexturesText(text1, "fonts/OpenSans-Bold.ttf", 0, 50, 0, 0, textColor);
+        //drawTexturesText(text1, "fonts/OpenSans-Bold.ttf", 0, 100, 50, 0, textColor);
+        
+        ColorRGBAf text1Color = {.r=1, .g=0, .b=0, .a=1.f};//{.r=1-tr, .g=1-tg, .b=1-tb, .a=1.f};
+        drawText(&drawableText1, text1Color);
+        
+        ColorRGBAf text2Color = {.r=0, .g=0, .b=1, .a=1.f};//{.r=tr, .g=tg, .b=tb, .a=1.f};
+        drawText(&drawableText2, text2Color);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(overlayWindow);

@@ -34,7 +34,7 @@ GLFWwindow* createOverlayWindow(GLFWmonitor* monitor, OverlaySettings* settings)
 
 /** Background **/
 void drawOverlayBackground(){
-    glDrawElements(GL_TRIANGLES, 4*3, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 2*3, GL_UNSIGNED_INT, 0);
 }
 
 GLuint compileOverlayBackground(){
@@ -86,18 +86,15 @@ void createOverlayBackground(UsableShaderData* shaderData){
 
     GLfloat a = 2/(SQRT_2+1);
     GLfloat overlay_backgroundShapeVertices[] = {
-        0, 0,
-        1, -1,
-        1, 1,
+        -1, -1,
         -1, 1,
-        -1, -1
+        1, 1,
+        1, -1
     };
 
     GLuint overlay_backgroundShapeElements[] = {
         0, 1, 2,
-        0, 2, 3,
-        0, 3, 4,
-        0, 4, 1,
+        0, 2, 3
     };
 
     //Load vertices
@@ -130,7 +127,7 @@ void createOverlayBackground(UsableShaderData* shaderData){
 
 /** Wheels **/
 void drawOverlayWheel(){
-    glDrawElements(GL_TRIANGLES, 4*3, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 2*3, GL_UNSIGNED_INT, 0);
 }
 
 GLuint compileOverlayWheel(){
@@ -181,18 +178,15 @@ void createOverlayWheel(UsableShaderData* shaderData){
     shaderData->shaderProgram = compileOverlayWheel();
     
     GLfloat overlay_wheelShapeVertices[] = {
-        0, 0,
-        1, -1,
-        1, 1,
+        -1, -1,
         -1, 1,
-        -1, -1
+        1, 1,
+        1, -1
     };
 
     GLuint overlay_wheelShapeElements[] = {
         0, 1, 2,
-        0, 2, 3,
-        0, 3, 4,
-        0, 4, 1,
+        0, 2, 3
     };
 
     //Load vertices
@@ -226,7 +220,7 @@ void createOverlayWheel(UsableShaderData* shaderData){
 
 /** Scrolls **/
 void drawOverlayScroll(){
-    glDrawElements(GL_TRIANGLES, 4*3, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 2*3, GL_UNSIGNED_INT, 0);
 }
 
 GLuint compileOverlayScroll(){
@@ -277,18 +271,15 @@ void createOverlayScroll(UsableShaderData* shaderData){
     shaderData->shaderProgram = compileOverlayScroll();
     
     GLfloat overlay_scrollShapeVertices[] = {
-        0, 0,
-        1, -1,
-        1, 1,
+        -1, -1,
         -1, 1,
-        -1, -1
+        1, 1,
+        1, -1
     };
 
     GLuint overlay_scrollShapeElements[] = {
         0, 1, 2,
-        0, 2, 3,
-        0, 3, 4,
-        0, 4, 1,
+        0, 2, 3
     };
 
     //Load vertices
@@ -319,18 +310,3 @@ void createOverlayScroll(UsableShaderData* shaderData){
     shaderData->drawFunction=drawOverlayScroll;
 }
 
-
-//todo
-void drawOverlay(GLFWwindow* overlayWindow, OverlaySettings* settings, UsableShaderData shaders[], GLuint shadersCount){
-    /* Make the window's context current */
-    //glfwMakeContextCurrent(overlayWindow);
-    
-    /* draw shaders views */
-    for(GLuint i = 0; i<shadersCount; i++){
-        glUseProgram(shaders[i].shaderProgram);
-        glBindVertexArray(shaders[i].vao);
-        shaders[i].drawFunction();
-    }
-
-    //...
-}
