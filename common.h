@@ -9,6 +9,9 @@
 #define SQRT_2 1.4142135623730951
 #define radians(v) (v / 180.0 * PI)
 
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+
 
 struct Dim2D {
     float width;

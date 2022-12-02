@@ -168,14 +168,35 @@ int main(int argc,char *argv[])
     //glUniform4f(overlayScroll1_backgroundColor, 1, 0, 0, 1);
 
     /** Text **/
-    unsigned long text1[4] = {65UL, 0UL};/*66UL, 67UL,*/
-    CharacterList cl_text1 = genTextCharacters(text1, "fonts/OpenSans-Bold.ttf", 0, 64);
+    Atlas atlas = createTextAtlas(0x30C4UL, 0x30C4UL+1, "fonts/NotoSansJP-Bold.otf", 64, 0);
+    printf("atlas done w : %i, h : %i, tex : %i\n", atlas.width, atlas.height, atlas.tex);
+    
+    unsigned long* text1 = wcharToULong(L"      \u30C4");
+    DrawableText drawableText1 = createDrawableTextUsingAtlas(text1, &atlas, -0.1, 0, 1/230.0, 1/384.0);
+    
+    Atlas atlas2 = createTextAtlas(32, 1<<8, "fonts/NotoSansJP-Bold.otf", 64, 0);
+    unsigned long* text2 = wcharToULong(L"Gg¯\\_(__)_/¯");
+    DrawableText drawableText2 = createDrawableTextUsingAtlas(text2, &atlas2, -1, 0, 1/230.0, 1/384.0);
+    printf("drawableText done\n");
+    /*
+    for(unsigned int i = 0; i<drawableText.vertices_count;i++){
+        printf("%f, ", drawableText.vertices[i]);
+    }
+    printf("\n");
+
+    for(unsigned int i = 0; i<drawableText.elements_count;i++){
+        printf("%i, ", drawableText.elements[i]);
+    }
+    printf("\n");
+    */
+    /*CharacterList cl_text1 = genTextCharacters(text1, "fonts/OpenSans-Bold.ttf", 0, 64);
     UsableShaderDataInput* overlayText1 = (UsableShaderDataInput*) malloc(sizeof(UsableShaderDataInput));
     createText(overlayText1);
     GLint overlayText1_textColor = glGetUniformLocation(overlayText1, "textColor");
     GLint overlayText1_projection = glGetUniformLocation(overlayText1, "projection");
 
     glUniform4f(overlayText1_textColor, 0, 1, 0, 1); //set text color to green
+    */
 
     //glfwSetKeyCallback(window, key_callback);
     //glfwSetCursorPosCallback(window, cursor_position_callback);
@@ -290,13 +311,18 @@ int main(int argc,char *argv[])
         
         /* Draw Text */
         //unsigned long text[4] = {65UL, 66UL, 67UL, 0UL};
-        ColorRGBAf textColor = {.r=0.f, .g=1.f, .b=0.f, .a=1.f};
         /*glUseProgram(overlayText1->shaderProgram);
         glUniform4f(overlayText1_projection, 0, width, 0, height);
         overlayText1->drawFunction(&cl_text1);*/
-        drawTexturesText(text1, "fonts/OpenSans-Bold.ttf", 0, 100, 0, 0, textColor);
-        drawTexturesText(text1, "fonts/OpenSans-Bold.ttf", 0, 100, 50, 0, textColor);
+        //drawTexturesText(text1, "fonts/OpenSans-Bold.ttf", 0, 50, 0, 0, textColor);
+        //drawTexturesText(text1, "fonts/OpenSans-Bold.ttf", 0, 100, 50, 0, textColor);
         
+        ColorRGBAf text1Color = {.r=1, .g=0, .b=0, .a=1.f};//{.r=1-tr, .g=1-tg, .b=1-tb, .a=1.f};
+        drawText(&drawableText1, text1Color);
+        
+        ColorRGBAf text2Color = {.r=0, .g=0, .b=1, .a=1.f};//{.r=tr, .g=tg, .b=tb, .a=1.f};
+        drawText(&drawableText2, text2Color);
+
         /* Swap front and back buffers */
         glfwSwapBuffers(overlayWindow);
 

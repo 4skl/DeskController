@@ -310,18 +310,3 @@ void createOverlayScroll(UsableShaderData* shaderData){
     shaderData->drawFunction=drawOverlayScroll;
 }
 
-
-//todo
-void drawOverlay(GLFWwindow* overlayWindow, OverlaySettings* settings, UsableShaderData shaders[], GLuint shadersCount){
-    /* Make the window's context current */
-    //glfwMakeContextCurrent(overlayWindow);
-    
-    /* draw shaders views */
-    for(GLuint i = 0; i<shadersCount; i++){
-        glUseProgram(shaders[i].shaderProgram);
-        glBindVertexArray(shaders[i].vao);
-        shaders[i].drawFunction();
-    }
-
-    //...
-}

@@ -3,6 +3,12 @@
         "ft2build.h": "c",
         "array": "c",
         "string_view": "c",
-        "initializer_list": "c"
+        "initializer_list": "c",
+        "deque": "cpp",
+        "list": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "vector": "cpp"
     }
 }

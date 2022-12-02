@@ -9,5 +9,5 @@ uniform vec4 textColor;
 void main()
 {    
     float sampled = texture(text, TexCoords).r; // /255 ? or .r useless
-    outColor = vec4(textColor) * sampled;
+    outColor = textColor * sampled;//vec4(textColor.rgb, textColor.a * sampled);
 }  
