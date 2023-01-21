@@ -18,7 +18,7 @@ GLFWwindow* createOverlayWindow(GLFWmonitor* monitor, OverlaySettings* settings)
     glfwWindowHint(GLFW_DECORATED, GL_FALSE);
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GL_TRUE);
     glfwWindowHint(GLFW_FLOATING, GL_TRUE);
-    //TODO uncomment when glfw 3.4 released glfwWindowHint(GLFW_MOUSE_PASSTHROUGH, GLFW_TRUE);
+    // todo add when GLFW 3.4 release glfwWindowHint(GLFW_MOUSE_PASSTHROUGH, GLFW_TRUE);
 
     /* Create a windowed mode window and its OpenGL context */
     overlayWindow = glfwCreateWindow((deskInfo->width*settings->sizeFactor)/100, 3, "DeskController", NULL, NULL); //glfwGetPrimaryMonitor() as 3rd argument for fullscreen
@@ -310,3 +310,112 @@ void createOverlayScroll(UsableShaderData* shaderData){
     shaderData->drawFunction=drawOverlayScroll;
 }
 
+DrawableText createDrawableTextWheelUsingAtlas(unsigned long* text, Atlas* atlas, float x, float y, float sx, float sy, float sizew, float sizeh, bool half_disp){
+
+    AtlasCharacter* characters = atlas->characters;
+    float atlas_width = (float) atlas->width;
+    float atlas_height = (float) atlas->height;
+
+    unsigned int text_len = 0;
+    while(text[text_len]) text_len++;
+
+    unsigned int vertices_count = 4*4*text_len;
+    unsigned int elements_count = 2*3*text_len;
+
+    //printf("Text len %i gonna create %i vertices and %i elements (%i + %i)\n", text_len, vertices_count, elements_count, sizeof(GLfloat)*vertices_count, sizeof(GLuint)*elements_count);
+
+    GLfloat* vertices = (GLfloat*) malloc(sizeof(GLfloat)*vertices_count);
+    //printf("Vertices OK\n");
+    GLuint* elements = (GLuint*) malloc(sizeof(GLuint)*elements_count);
+    //printf("Elements OK\n");
+
+    for(unsigned int i = 0; i<text_len;i++){
+        if(text[i] < atlas->start || text[i] > atlas->count+atlas->start) continue;
+        //printf("calculate %c vertices\n", text[i]);
+        unsigned int ie = i*2*3;
+        unsigned int iv = i*4*4;
+
+        elements[ie] = 0+i*4;
+        elements[ie+1] = 1+i*4;
+        elements[ie+2] = 2+i*4;
+        elements[ie+3] = 2+i*4;
+        elements[ie+4] = 3+i*4;
+        elements[ie+5] = 0+i*4;
+
+        AtlasCharacter ac = characters[text[i]-atlas->start];
+        //printf("bl : %f, bt : %f, bw : %f, bh : %f\n", ac.bl, ac.bt, ac.bw, ac.bh);
+        float xpos = x + ac.bl * sx;
+        float ypos = -y - (ac.bh - ac.bt) * sy;
+        
+        float rv = -((float) i + (half_disp ? 0.5 : 0))/text_len*2*PI+PI/2;
+        xpos += cos(rv)*sizew;
+        ypos += sin(rv)*sizeh;
+
+        float w = ac.bw * sx;
+        float h = ac.bh * sy;
+
+        /* Advance the cursor to the start of the next character */
+        /*x += ac.ax * sx;
+        y += ac.ay * sy; //? character in line so ? => perhaps in link with the minus sign of ypos above ¯\_(ツ)_/¯
+        */
+       // characters in circle around x and y, away by size
+
+
+        float l = xpos;
+        float t = (ypos + h);
+        float r = (xpos + w);
+        float b = ypos;
+
+        //TL
+        vertices[iv] = l;
+        vertices[iv+1] = t;
+        vertices[iv+2] = ac.tx;
+        vertices[iv+3] = 0;
+
+        //BL
+        vertices[iv+4] = l;
+        vertices[iv+5] = b; //! not normalized
+        vertices[iv+6] = ac.tx;
+        vertices[iv+7] = ac.bh/atlas_height;
+        
+        //BR
+        vertices[iv+8] = r; //! not normalized
+        vertices[iv+9] = b; //!
+        vertices[iv+10] = ac.tx + ac.bw/atlas_width;;
+        vertices[iv+11] = ac.bh/atlas_height;
+
+        //TR
+        vertices[iv+12] = r;
+        vertices[iv+13] = t;
+        vertices[iv+14] = ac.tx + ac.bw/atlas_width;;
+        vertices[iv+15] = 0;
+    }
+
+    //Create shader program
+    GLint shaderProgram = compileTextShader();
+
+    //Upload shader data
+    GLuint vao, vbo, ebo;
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ebo);
+    glBindVertexArray(vao);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*elements_count, elements, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*vertices_count, vertices, GL_STATIC_DRAW); //? dynamic draw ?
+    
+    GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
+    glEnableVertexAttribArray(posAttrib);
+    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (GLvoid*)0);
+
+    GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
+    glEnableVertexAttribArray(texAttrib);
+    glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (GLvoid*)(2*sizeof(GLfloat)));
+
+    glBindVertexArray(0); //?
+
+    return (DrawableText) {elements, elements_count, vertices, vertices_count, atlas->tex, shaderProgram, vao};
+}

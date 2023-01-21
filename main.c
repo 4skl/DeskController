@@ -6,6 +6,7 @@
 #include <math.h>
 #include <overlay.h>
 #include <draw_text.h>
+#include <send_inputs.h>
 
 #define FPS 144
 
@@ -69,6 +70,7 @@ float triangleVertices[] = {
 float joystickL[2];
 float joystickR[2];
 float triggerL, triggerR;
+bool bumperL, bumperR;
 bool smallGap = false;
 enum SelectPart {NONE = 0, BG, FG};
 enum SelectPart colorSelected = NONE;
@@ -147,7 +149,7 @@ int main(int argc,char *argv[])
 
     glUniform1i(overlayWheel1_partGradient, true);
     glUniform4f(overlayWheel1_segmentColor, 0.0, 1, 0.7, 0.8);
-    GLboolean segmentEnabled = false;
+    GLboolean segmentEnabled = true;
 
     /** Scroll **/
     UsableShaderData* overlayScroll1 = (UsableShaderData*) malloc(sizeof(UsableShaderData));
@@ -168,15 +170,18 @@ int main(int argc,char *argv[])
     //glUniform4f(overlayScroll1_backgroundColor, 1, 0, 0, 1);
 
     /** Text **/
-    Atlas atlas = createTextAtlas(0x30C4UL, 0x30C4UL+1, "fonts/NotoSansJP-Bold.otf", 64, 0);
-    printf("atlas done w : %i, h : %i, tex : %i\n", atlas.width, atlas.height, atlas.tex);
-    
-    unsigned long* text1 = wcharToULong(L"      \u30C4");
-    DrawableText drawableText1 = createDrawableTextUsingAtlas(text1, &atlas, -0.1, 0, 1/230.0, 1/384.0);
-    
-    Atlas atlas2 = createTextAtlas(32, 1<<8, "fonts/NotoSansJP-Bold.otf", 64, 0);
-    unsigned long* text2 = wcharToULong(L"Gg¯\\_(__)_/¯");
-    DrawableText drawableText2 = createDrawableTextUsingAtlas(text2, &atlas2, -1, 0, 1/230.0, 1/384.0);
+    Atlas atlas = createTextAtlas(32, 1<<8, "fonts/NotoSansJP-Bold.otf", 64, 0);
+    unsigned long* text1 = wcharToULong(L"ABCDEFGHIJKLMNOP");
+    DrawableText drawableText1 = createDrawableTextWheelUsingAtlas(text1, &atlas, -0.1, 0.45, 1/230.0, 1/384.0, 0.8, 0.8*230/384, true);
+    unsigned long* text2 = wcharToULong(L"QRSTUVWXYZ,.!?: ");
+    DrawableText drawableText2 = createDrawableTextWheelUsingAtlas(text2, &atlas, -0.1, 0.45, 1/230.0, 1/384.0, 0.8, 0.8*230/384, true);
+    unsigned long* text3 = wcharToULong(L"0123456789=-+*/%");
+    DrawableText drawableText3 = createDrawableTextWheelUsingAtlas(text3, &atlas, -0.1, 0.45, 1/230.0, 1/384.0, 0.8, 0.8*230/384, true);
+    unsigned long* text4 = wcharToULong(L"()[]{}_\"'#&$£§@");
+    DrawableText drawableText4 = createDrawableTextWheelUsingAtlas(text4, &atlas, -0.1, 0.45, 1/230.0, 1/384.0, 0.8, 0.8*230/384, true);
+
+    unsigned long* textCenter = wcharToULong(L"AQ0(    ");
+    DrawableText drawableTextCenter = createDrawableTextWheelUsingAtlas(textCenter, &atlas, -0.1, 0.45, 0.6/230.0, 0.6/384.0, 0.4, 0.4*230/384, true);
     printf("drawableText done\n");
     /*
     for(unsigned int i = 0; i<drawableText.vertices_count;i++){
@@ -238,6 +243,12 @@ int main(int argc,char *argv[])
         glBindVertexArray(overlayBackground->vao);
         overlayBackground->drawFunction();*/
 
+        GLuint wheelDiv;
+        GLuint wheelDivCount = 8;
+
+        GLuint wheel2Div;
+        GLuint wheel2DivCount = 16;
+
         
         if(triggerL != -1 || triggerR != -1){
             glUseProgram(overlayScroll1->shaderProgram);
@@ -281,11 +292,22 @@ int main(int argc,char *argv[])
             glUniform2f(overlayWheel1_wheelDimension, displayDim.width, displayDim.width);
             glUniform2f(overlayWheel1_center, displayDim.width/2, displayDim.width/2);
             glUniform1i(overlayWheel1_segmentEnabled, segmentEnabled);
+            if(fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
+                float angle2 = atan2f(joystickR[1],joystickR[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
+                wheel2Div = ((GLuint) (angle2 / (2*PI/wheel2DivCount))) % wheel2DivCount;
+                printf("Part2 : %i\n", wheel2Div);
+                glUniform1ui(overlayWheel1_divCount, wheel2DivCount);
+                glUniform2f(overlayWheel1_circleMinMax, 0.5, 1);
+                glUniform1ui(overlayWheel1_part, wheel2Div);
+                glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
+                glUniform4f(overlayWheel1_backgroundColor, 0.1, 0.6, 0.8, 1);
+                overlayWheel1->drawFunction();
+            }
+
             if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5){
-                GLuint wheelDivCount = 8;
                 //float angle = atan2(v.y/v.x) + PI; // angle from the point [-1, 0] in reverse clock cycle
                 float angle = atan2f(joystickL[1],joystickL[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
-                GLuint wheelDiv = ((GLuint)(angle / (2*PI/wheelDivCount))) % wheelDivCount;
+                wheelDiv = ((GLuint)(angle / (2*PI/wheelDivCount))) % wheelDivCount;
                 printf("Part1 : %i\n", wheelDiv);
                 glUniform1ui(overlayWheel1_divCount, wheelDivCount);
                 glUniform2f(overlayWheel1_circleMinMax, 0.2, 0.5);
@@ -293,19 +315,18 @@ int main(int argc,char *argv[])
                 glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
                 glUniform4f(overlayWheel1_backgroundColor, 0.3, 0.0, 0.0, 1);
                 overlayWheel1->drawFunction();
-            }
 
-            if(fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
-                GLuint wheelDivCount = 16;
-                float angle = atan2f(joystickR[1],joystickR[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
-                GLuint wheelDiv = ((GLuint) (angle / (2*PI/wheelDivCount))) % wheelDivCount;
-                printf("Part2 : %i\n", wheelDiv);
-                glUniform1ui(overlayWheel1_divCount, wheelDivCount);
-                glUniform2f(overlayWheel1_circleMinMax, 0.5, 1);
-                glUniform1ui(overlayWheel1_part, wheelDiv);
-                glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
-                glUniform4f(overlayWheel1_backgroundColor, 0.1, 0.6, 0.8, 1);
-                overlayWheel1->drawFunction();
+                ColorRGBAf textColor = {.r=1, .g=1, .b=1, .a=1.f};//{.r=tr, .g=tg, .b=tb, .a=1.f};
+                drawText(&drawableTextCenter, textColor);
+                if(wheelDiv == 2){
+                    drawText(&drawableText1, textColor);
+                }else if(wheelDiv == 3){
+                    drawText(&drawableText2, textColor);
+                }else if(wheelDiv == 4){
+                    drawText(&drawableText3, textColor);
+                }else if(wheelDiv == 5){
+                    drawText(&drawableText4, textColor);
+                }
             }
         }
         
@@ -316,12 +337,6 @@ int main(int argc,char *argv[])
         overlayText1->drawFunction(&cl_text1);*/
         //drawTexturesText(text1, "fonts/OpenSans-Bold.ttf", 0, 50, 0, 0, textColor);
         //drawTexturesText(text1, "fonts/OpenSans-Bold.ttf", 0, 100, 50, 0, textColor);
-        
-        ColorRGBAf text1Color = {.r=1, .g=0, .b=0, .a=1.f};//{.r=1-tr, .g=1-tg, .b=1-tb, .a=1.f};
-        drawText(&drawableText1, text1Color);
-        
-        ColorRGBAf text2Color = {.r=0, .g=0, .b=1, .a=1.f};//{.r=tr, .g=tg, .b=tb, .a=1.f};
-        drawText(&drawableText2, text2Color);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(overlayWindow);
@@ -345,6 +360,54 @@ int main(int argc,char *argv[])
 
             triggerL = state.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
             triggerR = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
+
+            bumperL = state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER];
+            bumperR = state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER];
+
+            if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
+                if(lastState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] != bumperR && bumperR){
+                    wchar_t key = 0;
+                    if(wheelDiv == 2){
+                        key = text1[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
+                    }else if(wheelDiv == 3){
+                        key = text2[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
+                    }else if(wheelDiv == 4){
+                        key = text3[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
+                    }else if(wheelDiv == 5){
+                        key = text4[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
+                    }
+                    switch(key){
+                        case '*':
+                            key = VK_MULTIPLY;
+                            break;
+                        case '+':
+                            key = VK_ADD;
+                            break;
+                            /*VK_SEPARATOR	0x6C	Separator key
+VK_SUBTRACT	0x6D	Subtract key
+VK_DECIMAL	0x6E	Decimal key
+VK_DIVIDE	0x6F	Divide key*/
+                    }
+                    if(key > 47 && key < 58) sendKey(VK_SHIFT);
+                    if(key != 0){
+                        sendChar(key);
+                    }
+                    if(key > 47 && key < 58) sendKeyEnd(VK_SHIFT);
+                }
+            }
+
+            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] != bumperL){
+                if(bumperL){
+                    sendKey(VK_SHIFT);
+                }else{
+                    sendKeyEnd(VK_SHIFT);
+                }
+            }
+
+            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT] != state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT]){
+                sendKey(VK_BACK);
+                sendKeyEnd(VK_BACK);
+            }
 
             tr = (joystickL[0]+1)/2;
             tg = (joystickL[1]+1)/2;
