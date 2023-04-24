@@ -75,7 +75,7 @@ bool buttonA, buttonB, buttonX, buttonY;
 bool buttonDpadUp, buttonDpadDown, buttonDpadLeft, buttonDpadRight;
 
 bool mouseMode = false;
-float leftSensitivity = 15, rightSensitivity = 5;
+float leftSensitivity = 15, rightSensitivity = 3;
 
 GLuint wheelDiv;
 GLuint wheelDivCount = 8;
@@ -486,15 +486,31 @@ int main(int argc,char *argv[])
                         sendKeyEnd(VK_BACK);
                     }
                 }
+
+                if(lastState.buttons[GLFW_GAMEPAD_BUTTON_A] != buttonA){
+                    if(buttonA){
+                        sendKey(VK_RETURN);
+                    }else{
+                        sendKeyEnd(VK_RETURN);
+                    }
+                }
             }
 
             // Universal actions (ignore mouse mode)
 
-            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] != bumperL){
-                if(bumperL){
+            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_X] != buttonX){
+                if(buttonX){
                     sendKey(VK_SHIFT);
                 }else{
                     sendKeyEnd(VK_SHIFT);
+                }
+            }
+
+            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_Y] != buttonY){
+                if(buttonY){
+                    sendKey(VK_CONTROL);
+                }else{
+                    sendKeyEnd(VK_CONTROL);
                 }
             }
 
