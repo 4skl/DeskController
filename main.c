@@ -14,7 +14,6 @@
 __declspec(dllexport) unsigned long NvOptimusEnablement = 1;
 __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 
-float tr,tg,tb;
 Dim2D displayDim;
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -71,9 +70,18 @@ float joystickL[2];
 float joystickR[2];
 float triggerL, triggerR;
 bool bumperL, bumperR;
-bool smallGap = false;
-enum SelectPart {NONE = 0, BG, FG};
-enum SelectPart colorSelected = NONE;
+bool start, back, guide;
+bool buttonA, buttonB, buttonX, buttonY;
+bool buttonDpadUp, buttonDpadDown, buttonDpadLeft, buttonDpadRight;
+
+bool mouseMode = false;
+float leftSensitivity = 15, rightSensitivity = 5;
+
+GLuint wheelDiv;
+GLuint wheelDivCount = 8;
+
+GLuint wheel2Div;
+GLuint wheel2DivCount = 16;
 
 OverlaySettings overlay_defaultSettings = {
     .sizeFactor=20,
@@ -173,11 +181,11 @@ int main(int argc,char *argv[])
     Atlas atlas = createTextAtlas(32, 1<<8, "fonts/NotoSansJP-Bold.otf", 64, 0);
     unsigned long* text1 = wcharToULong(L"ABCDEFGHIJKLMNOP");
     DrawableText drawableText1 = createDrawableTextWheelUsingAtlas(text1, &atlas, -0.1, 0.45, 1/230.0, 1/384.0, 0.8, 0.8*230/384, true);
-    unsigned long* text2 = wcharToULong(L"QRSTUVWXYZ,.!?: ");
+    unsigned long* text2 = wcharToULong(L"QRSTUVWXYZ,.!?:;");
     DrawableText drawableText2 = createDrawableTextWheelUsingAtlas(text2, &atlas, -0.1, 0.45, 1/230.0, 1/384.0, 0.8, 0.8*230/384, true);
     unsigned long* text3 = wcharToULong(L"0123456789=-+*/%");
     DrawableText drawableText3 = createDrawableTextWheelUsingAtlas(text3, &atlas, -0.1, 0.45, 1/230.0, 1/384.0, 0.8, 0.8*230/384, true);
-    unsigned long* text4 = wcharToULong(L"()[]{}_\"'#&$£§@");
+    unsigned long* text4 = wcharToULong(L" ()[]{}_\"'#&$@ ");
     DrawableText drawableText4 = createDrawableTextWheelUsingAtlas(text4, &atlas, -0.1, 0.45, 1/230.0, 1/384.0, 0.8, 0.8*230/384, true);
 
     unsigned long* textCenter = wcharToULong(L"AQ0(    ");
@@ -217,11 +225,13 @@ int main(int argc,char *argv[])
     glEnable(GL_BLEND);
     //glBlendFunc(GL_ONE, GL_ONE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    if(smallGap){
+    
+    //Set window size big (mouseMode = false)
+    /*if(smallGap){
         glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100, 3);
-    }else{
-        glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100*3/5, (deskInfo->width*overlaySettings.sizeFactor)/100);
-    }
+    }else{*/
+    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100*3/5, (deskInfo->width*overlaySettings.sizeFactor)/100);
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(overlayWindow))
     {
@@ -243,89 +253,87 @@ int main(int argc,char *argv[])
         glBindVertexArray(overlayBackground->vao);
         overlayBackground->drawFunction();*/
 
-        GLuint wheelDiv;
-        GLuint wheelDivCount = 8;
+        if(mouseMode){
+            // display only a knob, no text, color showing if scroll actived, selection,...
+        }else{
 
-        GLuint wheel2Div;
-        GLuint wheel2DivCount = 16;
+            if(triggerL != -1 || triggerR != -1){
+                glUseProgram(overlayScroll1->shaderProgram);
+                glBindVertexArray(overlayScroll1->vao);
+                
+                glUniform1i(overlayScroll1_segmentEnabled, segmentEnabled);
+                if(triggerR != -1){
+                    GLuint scrollDivCount = 4;
+                    GLuint scrollDiv = scrollDivCount - ((GLuint) ceilf((triggerR+1)/2*scrollDivCount));
+                    printf("%f Rtrig part : %i\n", triggerR, scrollDiv);
+                    glUniform1i(overlayScroll1_partGradient, true);
+                    glUniform1i(overlayScroll1_horizontal, true);
+                    glUniform2f(overlayScroll1_scrollDimension, displayDim.width, displayDim.height/5);
+                    glUniform2f(overlayScroll1_bottomLeft, 0, displayDim.height-displayDim.height/5);
+                    glUniform1ui(overlayScroll1_divCount, scrollDivCount);
+                    glUniform1ui(overlayScroll1_part, scrollDiv);
+                    glUniform4f(overlayScroll1_partColor, 0.87, 0.17, 0.85, 1);
 
-        
-        if(triggerL != -1 || triggerR != -1){
-            glUseProgram(overlayScroll1->shaderProgram);
-            glBindVertexArray(overlayScroll1->vao);
-            
-            glUniform1i(overlayScroll1_segmentEnabled, segmentEnabled);
-            if(triggerR != -1){
-                GLuint scrollDivCount = 4;
-                GLuint scrollDiv = scrollDivCount - ((GLuint) ceilf((triggerR+1)/2*scrollDivCount));
-                printf("%f Rtrig part : %i\n", triggerR, scrollDiv);
-                glUniform1i(overlayScroll1_partGradient, true);
-                glUniform1i(overlayScroll1_horizontal, true);
-                glUniform2f(overlayScroll1_scrollDimension, displayDim.width, displayDim.height/5);
-                glUniform2f(overlayScroll1_bottomLeft, 0, displayDim.height-displayDim.height/5);
-                glUniform1ui(overlayScroll1_divCount, scrollDivCount);
-                glUniform1ui(overlayScroll1_part, scrollDiv);
-                glUniform4f(overlayScroll1_partColor, 0.87, 0.17, 0.85, 1);
+                    overlayScroll1->drawFunction();
+                }
 
-                overlayScroll1->drawFunction();
+                if(triggerL != -1){ //at 0 cause like that or physically broken ?
+                    GLuint scrollDivCount = 2;
+                    GLuint scrollDiv = scrollDivCount - ((GLuint) ceilf((triggerL+1)/2*scrollDivCount));
+                    printf("%f Ltrig part : %i\n", triggerL, scrollDiv);
+                    glUniform1i(overlayScroll1_partGradient, false);
+                    glUniform1i(overlayScroll1_horizontal, false);
+                    glUniform2f(overlayScroll1_scrollDimension, displayDim.width, displayDim.width);
+                    glUniform2f(overlayScroll1_bottomLeft, 0, 0);
+                    glUniform1ui(overlayScroll1_divCount, scrollDivCount);
+                    glUniform1ui(overlayScroll1_part, scrollDiv);
+
+                    overlayScroll1->drawFunction();
+                }
             }
 
-            if(triggerL != -1){ //at 0 cause like that or physically broken ?
-                GLuint scrollDivCount = 2;
-                GLuint scrollDiv = scrollDivCount - ((GLuint) ceilf((triggerL+1)/2*scrollDivCount));
-                printf("%f Ltrig part : %i\n", triggerL, scrollDiv);
-                glUniform1i(overlayScroll1_partGradient, false);
-                glUniform1i(overlayScroll1_horizontal, false);
-                glUniform2f(overlayScroll1_scrollDimension, displayDim.width, displayDim.width);
-                glUniform2f(overlayScroll1_bottomLeft, 0, 0);
-                glUniform1ui(overlayScroll1_divCount, scrollDivCount);
-                glUniform1ui(overlayScroll1_part, scrollDiv);
+            if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
+                glUseProgram(overlayWheel1->shaderProgram);
+                glBindVertexArray(overlayWheel1->vao);
 
-                overlayScroll1->drawFunction();
-            }
-        }
+                glUniform2f(overlayWheel1_wheelDimension, displayDim.width, displayDim.width);
+                glUniform2f(overlayWheel1_center, displayDim.width/2, displayDim.width/2);
+                glUniform1i(overlayWheel1_segmentEnabled, segmentEnabled);
+                if(fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
+                    float angle2 = atan2f(joystickR[1],joystickR[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
+                    wheel2Div = ((GLuint) (angle2 / (2*PI/wheel2DivCount))) % wheel2DivCount;
+                    printf("Part2 : %i\n", wheel2Div);
+                    glUniform1ui(overlayWheel1_divCount, wheel2DivCount);
+                    glUniform2f(overlayWheel1_circleMinMax, 0.5, 1);
+                    glUniform1ui(overlayWheel1_part, wheel2Div);
+                    glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
+                    glUniform4f(overlayWheel1_backgroundColor, 0.1, 0.6, 0.8, 1);
+                    overlayWheel1->drawFunction();
+                }
 
-         if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
-            glUseProgram(overlayWheel1->shaderProgram);
-            glBindVertexArray(overlayWheel1->vao);
+                if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5){
+                    //float angle = atan2(v.y/v.x) + PI; // angle from the point [-1, 0] in reverse clock cycle
+                    float angle = atan2f(joystickL[1],joystickL[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
+                    wheelDiv = ((GLuint)(angle / (2*PI/wheelDivCount))) % wheelDivCount;
+                    printf("Part1 : %i\n", wheelDiv);
+                    glUniform1ui(overlayWheel1_divCount, wheelDivCount);
+                    glUniform2f(overlayWheel1_circleMinMax, 0.2, 0.5);
+                    glUniform1ui(overlayWheel1_part, wheelDiv);
+                    glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
+                    glUniform4f(overlayWheel1_backgroundColor, 0.3, 0.0, 0.0, 1);
+                    overlayWheel1->drawFunction();
 
-            glUniform2f(overlayWheel1_wheelDimension, displayDim.width, displayDim.width);
-            glUniform2f(overlayWheel1_center, displayDim.width/2, displayDim.width/2);
-            glUniform1i(overlayWheel1_segmentEnabled, segmentEnabled);
-            if(fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
-                float angle2 = atan2f(joystickR[1],joystickR[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
-                wheel2Div = ((GLuint) (angle2 / (2*PI/wheel2DivCount))) % wheel2DivCount;
-                printf("Part2 : %i\n", wheel2Div);
-                glUniform1ui(overlayWheel1_divCount, wheel2DivCount);
-                glUniform2f(overlayWheel1_circleMinMax, 0.5, 1);
-                glUniform1ui(overlayWheel1_part, wheel2Div);
-                glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
-                glUniform4f(overlayWheel1_backgroundColor, 0.1, 0.6, 0.8, 1);
-                overlayWheel1->drawFunction();
-            }
-
-            if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5){
-                //float angle = atan2(v.y/v.x) + PI; // angle from the point [-1, 0] in reverse clock cycle
-                float angle = atan2f(joystickL[1],joystickL[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
-                wheelDiv = ((GLuint)(angle / (2*PI/wheelDivCount))) % wheelDivCount;
-                printf("Part1 : %i\n", wheelDiv);
-                glUniform1ui(overlayWheel1_divCount, wheelDivCount);
-                glUniform2f(overlayWheel1_circleMinMax, 0.2, 0.5);
-                glUniform1ui(overlayWheel1_part, wheelDiv);
-                glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
-                glUniform4f(overlayWheel1_backgroundColor, 0.3, 0.0, 0.0, 1);
-                overlayWheel1->drawFunction();
-
-                ColorRGBAf textColor = {.r=1, .g=1, .b=1, .a=1.f};//{.r=tr, .g=tg, .b=tb, .a=1.f};
-                drawText(&drawableTextCenter, textColor);
-                if(wheelDiv == 2){
-                    drawText(&drawableText1, textColor);
-                }else if(wheelDiv == 3){
-                    drawText(&drawableText2, textColor);
-                }else if(wheelDiv == 4){
-                    drawText(&drawableText3, textColor);
-                }else if(wheelDiv == 5){
-                    drawText(&drawableText4, textColor);
+                    ColorRGBAf textColor = {.r=1, .g=1, .b=1, .a=1.f};
+                    drawText(&drawableTextCenter, textColor);
+                    if(wheelDiv == 2){
+                        drawText(&drawableText1, textColor);
+                    }else if(wheelDiv == 3){
+                        drawText(&drawableText2, textColor);
+                    }else if(wheelDiv == 4){
+                        drawText(&drawableText3, textColor);
+                    }else if(wheelDiv == 5){
+                        drawText(&drawableText4, textColor);
+                    }
                 }
             }
         }
@@ -364,43 +372,123 @@ int main(int argc,char *argv[])
             bumperL = state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER];
             bumperR = state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER];
 
-            if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
-                if(lastState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] != bumperR && bumperR){
-                    wchar_t key = 0;
-                    if(wheelDiv == 2){
-                        key = text1[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
-                    }else if(wheelDiv == 3){
-                        key = text2[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
-                    }else if(wheelDiv == 4){
-                        key = text3[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
-                    }else if(wheelDiv == 5){
-                        key = text4[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
+            start = state.buttons[GLFW_GAMEPAD_BUTTON_START];
+            back = state.buttons[GLFW_GAMEPAD_BUTTON_BACK];
+            guide = state.buttons[GLFW_GAMEPAD_BUTTON_GUIDE];
+
+            buttonA = state.buttons[GLFW_GAMEPAD_BUTTON_A];
+            buttonB = state.buttons[GLFW_GAMEPAD_BUTTON_B];
+            buttonX = state.buttons[GLFW_GAMEPAD_BUTTON_X];
+            buttonY = state.buttons[GLFW_GAMEPAD_BUTTON_Y];
+
+            buttonDpadUp = state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP];
+            buttonDpadDown = state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN];
+            buttonDpadLeft = state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT];
+            buttonDpadRight = state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT];
+
+            if(mouseMode){
+
+                if(lastState.buttons[GLFW_GAMEPAD_BUTTON_BACK] != back){
+                    if(back){
+                        sendKey(VK_ESCAPE);
+                    }else{
+                        sendKeyEnd(VK_ESCAPE);
                     }
-                    switch(key){
-                        case '*':
-                            key = VK_MULTIPLY;
-                            break;
-                        case '+':
-                            key = VK_ADD;
-                            break;
-                        case '|': 
-                            key = VK_SEPARATOR;
-                            break;
-                        case '-':
-                            key = VK_SUBTRACT;
-                            break;
-                        case '/':
-                            key = VK_DIVIDE;
-                            break;
-                        //VK_DECIMAL	0x6E	Decimal key
+                }
+                
+                // Left/Right click on bumper
+                if(lastState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] != bumperR){
+                    if(bumperR){
+                        mouseDown(VK_RBUTTON);
+                    }else{
+                        mouseUp(VK_RBUTTON);
                     }
-                    if(key > 47 && key < 58) sendKey(VK_SHIFT);
-                    if(key != 0){
-                        sendChar(key);
+                }
+
+                if(lastState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] != bumperL){
+                    if(bumperL){
+                        mouseDown(VK_LBUTTON);
+                    }else{
+                        mouseUp(VK_LBUTTON);
                     }
-                    if(key > 47 && key < 58) sendKeyEnd(VK_SHIFT);
+                }
+
+                // Mouse scroll on triggers
+                if(lastState.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] != triggerR){
+                    mouseScroll((int) (-3*(triggerR+1)/2));
+                }else if(triggerR == 1){ // trigger fully pressed
+                    mouseScroll(-4);
+                }
+
+                if(lastState.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] != triggerL){
+                    mouseScroll((int) (3*(triggerL+1)/2));
+                }else if(triggerL == 1){ // trigger fully pressed
+                    mouseScroll(4);
+                }
+
+                // Mouse movement on left joystick
+                if(fabsf(joystickL[0]) > 0){
+                    mouseMove(joystickL[0]*leftSensitivity, joystickL[1]*leftSensitivity);
+                }
+
+                if(fabsf(joystickR[1]) > 0){
+                    mouseMove(joystickR[0]*rightSensitivity, joystickR[1]*rightSensitivity);
+                }
+                
+            }else{
+
+                if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
+                    if(lastState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] != bumperR && bumperR){
+                        wchar_t key = 0;
+                        if(wheelDiv == 2){
+                            key = text1[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
+                        }else if(wheelDiv == 3){
+                            key = text2[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
+                        }else if(wheelDiv == 4){
+                            key = text3[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
+                        }else if(wheelDiv == 5){
+                            key = text4[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
+                        }
+                        //for maj letters
+                        if(key >= 'A' && key <= 'Z'){
+                             sendKey(key);
+                             sendKeyEnd(key);
+                        }else if(key != 0){
+                            sendChar(key);
+                        }
+                        /*
+                        switch(key){
+                            case '*':
+                                key = VK_MULTIPLY;
+                                break;
+                            case '+':
+                                key = VK_ADD;
+                                break;
+                            case '|': 
+                                key = VK_SEPARATOR;
+                                break;
+                            case '-':
+                                key = VK_SUBTRACT;
+                                break;
+                            case '/':
+                                key = VK_DIVIDE;
+                                break;
+                            //VK_DECIMAL	0x6E	Decimal key
+                        }
+                    */
+                    }
+                }
+
+                if(lastState.buttons[GLFW_GAMEPAD_BUTTON_BACK] != back){
+                    if(back){
+                        sendKey(VK_BACK);
+                    }else{
+                        sendKeyEnd(VK_BACK);
+                    }
                 }
             }
+
+            // Universal actions (ignore mouse mode)
 
             if(lastState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] != bumperL){
                 if(bumperL){
@@ -410,11 +498,40 @@ int main(int argc,char *argv[])
                 }
             }
 
-            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT] != state.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT]){
-                sendKey(VK_BACK);
-                sendKeyEnd(VK_BACK);
+            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT] != buttonDpadLeft){
+                if(buttonDpadLeft){
+                    sendKey(VK_LEFT);
+                    sendKeyEnd(VK_LEFT);
+                }
             }
 
+            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT] != buttonDpadRight){
+                if(buttonDpadRight){
+                    sendKey(VK_RIGHT);
+                }else{
+                    sendKeyEnd(VK_RIGHT);
+                }
+            }
+
+            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP] != buttonDpadUp){
+                if(buttonDpadUp){
+                    sendKey(VK_UP);
+                }else{
+                    sendKeyEnd(VK_UP);
+                }
+            }
+
+            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN] != buttonDpadDown){
+                if(buttonDpadDown){
+                    sendKey(VK_DOWN);
+                }else{
+                    sendKeyEnd(VK_DOWN);
+                }
+            }
+
+
+/* useless
+            float tr,tg,tb;
             tr = (joystickL[0]+1)/2;
             tg = (joystickL[1]+1)/2;
             tb = (joystickR[0]+1)/2;
@@ -427,9 +544,9 @@ int main(int argc,char *argv[])
                 overlaySettings.foregroundColor.g = tg;
                 overlaySettings.foregroundColor.b = tb;
             }
-            /*if(abs(joystickL[0]) > 0.05  || abs(joystickL[1]) > 0.05){
-                printf("part : %i \n", (int) (((atan(joystickL[0]/-joystickL[1])+PI/2)/radians(45.0)))); //TODO
-            }*/
+            //if(abs(joystickL[0]) > 0.05  || abs(joystickL[1]) > 0.05){
+            //    printf("part : %i \n", (int) (((atan(joystickL[0]/-joystickL[1])+PI/2)/radians(45.0)))); //TODO
+            //}
             //printf("%f %f %f\n", tr, tv, tb);
             if (state.buttons[GLFW_GAMEPAD_BUTTON_A])
             {
@@ -447,10 +564,12 @@ int main(int argc,char *argv[])
             if(state.buttons[GLFW_GAMEPAD_BUTTON_X] && state.buttons[GLFW_GAMEPAD_BUTTON_X] != lastState.buttons[GLFW_GAMEPAD_BUTTON_X]){
                 segmentEnabled = !segmentEnabled;
             }
+            */
             if(state.buttons[GLFW_GAMEPAD_BUTTON_GUIDE] && state.buttons[GLFW_GAMEPAD_BUTTON_GUIDE] != lastState.buttons[GLFW_GAMEPAD_BUTTON_GUIDE]){
                 //need timing
-                smallGap = !smallGap;
-                if(smallGap){
+                mouseMode = !mouseMode;
+
+                if(mouseMode){
                     glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100, 3);
                 }else{
                     glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100*3/5, (deskInfo->width*overlaySettings.sizeFactor)/100);
