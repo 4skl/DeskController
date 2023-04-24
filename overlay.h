@@ -5,9 +5,12 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <math.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <load_shader.h>
 #include <common.h>
+#include <draw_text.h>
 
 struct OverlaySettings{
     uint8_t sizeFactor;
@@ -31,6 +34,7 @@ void drawOverlayScroll();
 GLuint compileOverlayScroll();
 void createOverlayScroll(UsableShaderData* shaderData);
 
-void drawOverlay(GLFWwindow* overlayWindow, OverlaySettings* settings, UsableShaderData shaders[], GLuint shadersCount);
+//void drawOverlay(GLFWwindow* overlayWindow, OverlaySettings* settings, UsableShaderData shaders[], GLuint shadersCount);
+DrawableText createDrawableTextWheelUsingAtlas(unsigned long* text, Atlas* atlas, float x, float y, float sx, float sy, float sizew, float sizeh, bool half_disp);
 
 #endif

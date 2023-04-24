@@ -1,0 +1,15 @@
+#size <%screenWidth> [%screenHeight]
+#sizep <overlayWidth px> [overlayHeight px]
+
+size 20
+
+#move <%x> <%y>
+#movep <px x> <px y>
+
+#bcolor <#hex color>
+#fcolor <#hex color>
+
+#wheel <%height> <%width> <sep>
+#scroll <rl|lr|bt|tb> <%height> <%width>
+
+wheel 30 30
