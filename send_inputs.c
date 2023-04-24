@@ -1,15 +1,17 @@
 #include "send_inputs.h"
 
 void sendChar(wchar_t character){
+    
     INPUT inputs[2] = {};
     ZeroMemory(inputs, sizeof(inputs));
 
     inputs[0].type = INPUT_KEYBOARD;
-    inputs[0].ki.wVk = character;
+    inputs[0].ki.wScan = character; 
+    inputs[0].ki.dwFlags = KEYEVENTF_UNICODE;
 
-    inputs[1].type = INPUT_KEYBOARD;
-    inputs[1].ki.wVk = character;
-    inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
+    inputs[1].type = INPUT_KEYBOARD; 
+    inputs[1].ki.wScan = character; 
+    inputs[1].ki.dwFlags = KEYEVENTF_KEYUP  | KEYEVENTF_UNICODE;
 
     UINT uSent = SendInput(ARRAYSIZE(inputs), inputs, sizeof(INPUT));
     if (uSent != ARRAYSIZE(inputs))

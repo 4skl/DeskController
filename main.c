@@ -383,10 +383,16 @@ int main(int argc,char *argv[])
                         case '+':
                             key = VK_ADD;
                             break;
-                            /*VK_SEPARATOR	0x6C	Separator key
-VK_SUBTRACT	0x6D	Subtract key
-VK_DECIMAL	0x6E	Decimal key
-VK_DIVIDE	0x6F	Divide key*/
+                        case '|': 
+                            key = VK_SEPARATOR;
+                            break;
+                        case '-':
+                            key = VK_SUBTRACT;
+                            break;
+                        case '/':
+                            key = VK_DIVIDE;
+                            break;
+                        //VK_DECIMAL	0x6E	Decimal key
                     }
                     if(key > 47 && key < 58) sendKey(VK_SHIFT);
                     if(key != 0){
