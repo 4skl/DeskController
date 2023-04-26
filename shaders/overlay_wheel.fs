@@ -23,11 +23,13 @@ void main(){
         float dCenter = sqrt(pos.x*pos.x + pos.y*pos.y);
 
         if(dCenter > circleMinMax.x && dCenter < circleMinMax.y){
-            float posAngle = atan(-pos.y,pos.x) + PI;
+            float posAngle = mod(atan(-pos.y,pos.x) + PI/2 + PI/divCount, 2*PI);
             float partF = posAngle / sizeDiv;
+            float partAngleStart = float(part)*sizeDiv;
+            float partAngleEnd = float(part+1)*sizeDiv;
             if(segmentEnabled && (fract(partF) < segmentAngleRatio/2 || 1-fract(partF) < segmentAngleRatio/2)){//draw borders of wheel // todo correct
                 outColor = segmentColor;
-            }else if(part == uint(partF)){
+            }else if(posAngle > partAngleStart && posAngle < partAngleEnd){
                 if(partGradient){
                     float wheelMask = (dCenter - circleMinMax.x)/(circleMinMax.y-circleMinMax.x);
                     outColor = wheelMask * partColor + (1-wheelMask) * backgroundColor;

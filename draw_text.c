@@ -149,14 +149,13 @@ Atlas createTextAtlas(unsigned long start, unsigned long end, const char* font_p
     return (Atlas) {characters, w, h, tex, end-start, start};
 }
 
-DrawableText createDrawableTextUsingAtlas(unsigned long* text, Atlas* atlas, float x, float y, float sx, float sy){
+DrawableText createDrawableTextUsingAtlas(wchar_t * text, Atlas* atlas, float x, float y, float sx, float sy){
 
     AtlasCharacter* characters = atlas->characters;
     float atlas_width = (float) atlas->width;
     float atlas_height = (float) atlas->height;
 
-    unsigned int text_len = 0;
-    while(text[text_len]) text_len++;
+    unsigned int text_len = wcslen(text);
 
     unsigned int vertices_count = 4*4*text_len;
     unsigned int elements_count = 2*3*text_len;
@@ -262,6 +261,7 @@ void drawText(DrawableText * draw, ColorRGBAf color){
     glDrawElements(GL_TRIANGLES, draw->elements_count, GL_UNSIGNED_INT, 0);
 }
 
+/* using now wchar_t instead of long, better
 unsigned long * charToULong(const char * text){
     unsigned int text_len = 0;
     while(text[text_len]) text_len++;
@@ -285,3 +285,4 @@ unsigned long * wcharToULong(const short * text){
     out[text_len] = 0;
     return out;
 }
+*/
