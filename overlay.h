@@ -35,6 +35,6 @@ GLuint compileOverlayScroll();
 void createOverlayScroll(UsableShaderData* shaderData);
 
 //void drawOverlay(GLFWwindow* overlayWindow, OverlaySettings* settings, UsableShaderData shaders[], GLuint shadersCount);
-DrawableText createDrawableTextWheelUsingAtlas(unsigned long* text, Atlas* atlas, float x, float y, float sx, float sy, float sizew, float sizeh, bool half_disp);
+DrawableText createDrawableTextWheelUsingAtlas(wchar_t * text, Atlas* atlas, float x, float y, float sx, float sy, float sizew, float sizeh);
 
 #endif

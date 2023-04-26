@@ -75,7 +75,7 @@ bool buttonA, buttonB, buttonX, buttonY;
 bool buttonDpadUp, buttonDpadDown, buttonDpadLeft, buttonDpadRight;
 
 bool mouseMode = false;
-float leftSensitivity = 15, rightSensitivity = 5;
+float leftSensitivity = 5, rightSensitivity = 3;
 
 GLuint wheelDiv;
 GLuint wheelDivCount = 8;
@@ -178,18 +178,24 @@ int main(int argc,char *argv[])
     //glUniform4f(overlayScroll1_backgroundColor, 1, 0, 0, 1);
 
     /** Text **/
-    Atlas atlas = createTextAtlas(32, 1<<8, "fonts/NotoSansJP-Bold.otf", 64, 0);
-    unsigned long* text1 = wcharToULong(L"ABCDEFGHIJKLMNOP");
-    DrawableText drawableText1 = createDrawableTextWheelUsingAtlas(text1, &atlas, -0.1, 0.45, 1/230.0, 1/384.0, 0.8, 0.8*230/384, true);
-    unsigned long* text2 = wcharToULong(L"QRSTUVWXYZ,.!?:;");
-    DrawableText drawableText2 = createDrawableTextWheelUsingAtlas(text2, &atlas, -0.1, 0.45, 1/230.0, 1/384.0, 0.8, 0.8*230/384, true);
-    unsigned long* text3 = wcharToULong(L"0123456789=-+*/%");
-    DrawableText drawableText3 = createDrawableTextWheelUsingAtlas(text3, &atlas, -0.1, 0.45, 1/230.0, 1/384.0, 0.8, 0.8*230/384, true);
-    unsigned long* text4 = wcharToULong(L" ()[]{}_\"'#&$@ ");
-    DrawableText drawableText4 = createDrawableTextWheelUsingAtlas(text4, &atlas, -0.1, 0.45, 1/230.0, 1/384.0, 0.8, 0.8*230/384, true);
+    Atlas atlas = createTextAtlas(32, 1<<8, "fonts/Roboto-Bold.ttf", 64, 0);
+    wchar_t* text1 = L"ABCDEFGHIJKLM";
+    DrawableText drawableText1 = createDrawableTextWheelUsingAtlas(text1, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    wchar_t* text2 = L"NOPQRSTUVWXYZ";
+    DrawableText drawableText2 = createDrawableTextWheelUsingAtlas(text2, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    wchar_t* text3 = L"0123456789";
+    DrawableText drawableText3 = createDrawableTextWheelUsingAtlas(text3, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    wchar_t* text4 = L" ()[]{}_\"'#&$@ ";
+    DrawableText drawableText4 = createDrawableTextWheelUsingAtlas(text4, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    wchar_t* text5 =L",.!?:;^¨°`~";
+    DrawableText drawableText5 = createDrawableTextWheelUsingAtlas(text5, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    wchar_t* text6 = L"=-+*/%";
+    DrawableText drawableText6 = createDrawableTextWheelUsingAtlas(text6, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    
 
-    unsigned long* textCenter = wcharToULong(L"AQ0(    ");
-    DrawableText drawableTextCenter = createDrawableTextWheelUsingAtlas(textCenter, &atlas, -0.1, 0.45, 0.6/230.0, 0.6/384.0, 0.4, 0.4*230/384, true);
+    wchar_t* textCenter = L"AQ0(;+";
+    DrawableText drawableTextCenter = createDrawableTextWheelUsingAtlas(textCenter, &atlas, -.05, 0.43, 0.6/230.0, 0.6/384.0, 0.4, 0.4*230/384);
+    wheelDivCount = wcslen(textCenter);
     printf("drawableText done\n");
     /*
     for(unsigned int i = 0; i<drawableText.vertices_count;i++){
@@ -265,7 +271,6 @@ int main(int argc,char *argv[])
                 if(triggerR != -1){
                     GLuint scrollDivCount = 4;
                     GLuint scrollDiv = scrollDivCount - ((GLuint) ceilf((triggerR+1)/2*scrollDivCount));
-                    printf("%f Rtrig part : %i\n", triggerR, scrollDiv);
                     glUniform1i(overlayScroll1_partGradient, true);
                     glUniform1i(overlayScroll1_horizontal, true);
                     glUniform2f(overlayScroll1_scrollDimension, displayDim.width, displayDim.height/5);
@@ -280,7 +285,6 @@ int main(int argc,char *argv[])
                 if(triggerL != -1){ //at 0 cause like that or physically broken ?
                     GLuint scrollDivCount = 2;
                     GLuint scrollDiv = scrollDivCount - ((GLuint) ceilf((triggerL+1)/2*scrollDivCount));
-                    printf("%f Ltrig part : %i\n", triggerL, scrollDiv);
                     glUniform1i(overlayScroll1_partGradient, false);
                     glUniform1i(overlayScroll1_horizontal, false);
                     glUniform2f(overlayScroll1_scrollDimension, displayDim.width, displayDim.width);
@@ -300,9 +304,9 @@ int main(int argc,char *argv[])
                 glUniform2f(overlayWheel1_center, displayDim.width/2, displayDim.width/2);
                 glUniform1i(overlayWheel1_segmentEnabled, segmentEnabled);
                 if(fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
-                    float angle2 = atan2f(joystickR[1],joystickR[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
-                    wheel2Div = ((GLuint) (angle2 / (2*PI/wheel2DivCount))) % wheel2DivCount;
-                    printf("Part2 : %i\n", wheel2Div);
+                    float angle = fmodf(atan2f(joystickR[1],joystickR[0]) - PI/2 + PI + 2*PI, 2*PI); //angle in inverse clock cycle from 0 to 2*PI
+                    wheel2Div = (GLuint)(angle / (2*PI/wheel2DivCount));
+                    printf("div %i : %i ; %f\n", wheel2Div, wheel2DivCount, angle);
                     glUniform1ui(overlayWheel1_divCount, wheel2DivCount);
                     glUniform2f(overlayWheel1_circleMinMax, 0.5, 1);
                     glUniform1ui(overlayWheel1_part, wheel2Div);
@@ -313,9 +317,8 @@ int main(int argc,char *argv[])
 
                 if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5){
                     //float angle = atan2(v.y/v.x) + PI; // angle from the point [-1, 0] in reverse clock cycle
-                    float angle = atan2f(joystickL[1],joystickL[0]) + PI; //angle in inverse clock cycle from 0 to 2*PI
-                    wheelDiv = ((GLuint)(angle / (2*PI/wheelDivCount))) % wheelDivCount;
-                    printf("Part1 : %i\n", wheelDiv);
+                    float angle = fmodf(atan2f(joystickL[1],joystickL[0]) - PI/2 + PI + 2*PI, 2*PI); //angle in inverse clock cycle from 0 to 2*PI
+                    wheelDiv = (GLuint)(angle / (2*PI/(wheelDivCount)));
                     glUniform1ui(overlayWheel1_divCount, wheelDivCount);
                     glUniform2f(overlayWheel1_circleMinMax, 0.2, 0.5);
                     glUniform1ui(overlayWheel1_part, wheelDiv);
@@ -325,14 +328,24 @@ int main(int argc,char *argv[])
 
                     ColorRGBAf textColor = {.r=1, .g=1, .b=1, .a=1.f};
                     drawText(&drawableTextCenter, textColor);
-                    if(wheelDiv == 2){
+                    if(wheelDiv == 0){
+                        wheel2DivCount = wcslen(text1);
                         drawText(&drawableText1, textColor);
-                    }else if(wheelDiv == 3){
+                    }else if(wheelDiv == 1){
+                        wheel2DivCount = wcslen(text2);
                         drawText(&drawableText2, textColor);
-                    }else if(wheelDiv == 4){
+                    }else if(wheelDiv == 2){
+                        wheel2DivCount = wcslen(text3);
                         drawText(&drawableText3, textColor);
-                    }else if(wheelDiv == 5){
+                    }else if(wheelDiv == 3){
+                        wheel2DivCount = wcslen(text4);
                         drawText(&drawableText4, textColor);
+                    }else if(wheelDiv == 4){
+                        wheel2DivCount = wcslen(text5);
+                        drawText(&drawableText5, textColor);
+                    }else if(wheelDiv == 5){
+                        wheel2DivCount = wcslen(text6);
+                        drawText(&drawableText6, textColor);
                     }
                 }
             }
@@ -414,41 +427,43 @@ int main(int argc,char *argv[])
                 }
 
                 // Mouse scroll on triggers
-                if(lastState.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] != triggerR){
-                    mouseScroll((int) (-3*(triggerR+1)/2));
-                }else if(triggerR == 1){ // trigger fully pressed
-                    mouseScroll(-4);
+                if(triggerR>-1){
+                    mouseScroll((int) -powf(2,5*(triggerR+1)/2));
                 }
 
-                if(lastState.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] != triggerL){
-                    mouseScroll((int) (3*(triggerL+1)/2));
-                }else if(triggerL == 1){ // trigger fully pressed
-                    mouseScroll(4);
+                if(triggerL>-1){
+                    mouseScroll((int) powf(2,5*(triggerL+1)/2));
                 }
 
                 // Mouse movement on left joystick
                 if(fabsf(joystickL[0]) > 0){
-                    mouseMove(joystickL[0]*leftSensitivity, joystickL[1]*leftSensitivity);
+                    mouseMove(copysignf(powf(2,fabs(joystickL[0])*leftSensitivity)-1, joystickL[0]), copysignf(powf(2,fabs(joystickL[1])*leftSensitivity)-1, joystickL[1]));
                 }
 
                 if(fabsf(joystickR[1]) > 0){
-                    mouseMove(joystickR[0]*rightSensitivity, joystickR[1]*rightSensitivity);
+                    mouseMove(copysignf(powf(2,fabs(joystickR[0])*rightSensitivity)-1, joystickR[0]), copysignf(powf(2,fabs(joystickR[1])*rightSensitivity)-1, joystickR[1]));
                 }
                 
             }else{
 
                 if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
-                    if(lastState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] != bumperR && bumperR){
+                    if(lastState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] != bumperR && bumperR || lastState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] != bumperL && bumperL){ // Both bumpers works, useful when using buttons (ctrl,..)
                         wchar_t key = 0;
-                        if(wheelDiv == 2){
-                            key = text1[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
+                        if(wheelDiv == 0){
+                            key = text1[wheel2Div];
+                        }else if(wheelDiv == 1){
+                            key = text2[wheel2Div];
+                        }else if(wheelDiv == 2){
+                            key = text3[wheel2Div];
                         }else if(wheelDiv == 3){
-                            key = text2[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
+                            key = text4[wheel2Div];
                         }else if(wheelDiv == 4){
-                            key = text3[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
+                            key = text5[wheel2Div];
                         }else if(wheelDiv == 5){
-                            key = text4[((wheel2Div-wheel2DivCount/4)%wheel2DivCount)];
+                            key = text6[wheel2Div];
                         }
+
+                        printf("key %c : %x\n", key, key);
                         //for maj letters
                         if(key >= 'A' && key <= 'Z'){
                              sendKey(key);
@@ -486,15 +501,31 @@ int main(int argc,char *argv[])
                         sendKeyEnd(VK_BACK);
                     }
                 }
+
+                if(lastState.buttons[GLFW_GAMEPAD_BUTTON_A] != buttonA){
+                    if(buttonA){
+                        sendKey(VK_RETURN);
+                    }else{
+                        sendKeyEnd(VK_RETURN);
+                    }
+                }
             }
 
             // Universal actions (ignore mouse mode)
 
-            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] != bumperL){
-                if(bumperL){
+            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_X] != buttonX){
+                if(buttonX){
                     sendKey(VK_SHIFT);
                 }else{
                     sendKeyEnd(VK_SHIFT);
+                }
+            }
+
+            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_Y] != buttonY){
+                if(buttonY){
+                    sendKey(VK_CONTROL);
+                }else{
+                    sendKeyEnd(VK_CONTROL);
                 }
             }
 

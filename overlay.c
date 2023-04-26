@@ -310,14 +310,13 @@ void createOverlayScroll(UsableShaderData* shaderData){
     shaderData->drawFunction=drawOverlayScroll;
 }
 
-DrawableText createDrawableTextWheelUsingAtlas(unsigned long* text, Atlas* atlas, float x, float y, float sx, float sy, float sizew, float sizeh, bool half_disp){
+DrawableText createDrawableTextWheelUsingAtlas(wchar_t * text, Atlas* atlas, float x, float y, float sx, float sy, float sizew, float sizeh){
 
     AtlasCharacter* characters = atlas->characters;
     float atlas_width = (float) atlas->width;
     float atlas_height = (float) atlas->height;
 
-    unsigned int text_len = 0;
-    while(text[text_len]) text_len++;
+    unsigned int text_len = wcslen(text);
 
     unsigned int vertices_count = 4*4*text_len;
     unsigned int elements_count = 2*3*text_len;
@@ -346,8 +345,7 @@ DrawableText createDrawableTextWheelUsingAtlas(unsigned long* text, Atlas* atlas
         //printf("bl : %f, bt : %f, bw : %f, bh : %f\n", ac.bl, ac.bt, ac.bw, ac.bh);
         float xpos = x + ac.bl * sx;
         float ypos = -y - (ac.bh - ac.bt) * sy;
-        
-        float rv = -((float) i + (half_disp ? 0.5 : 0))/text_len*2*PI+PI/2;
+        float rv = -((float) i)/text_len*2*PI+PI/2;
         xpos += cos(rv)*sizew;
         ypos += sin(rv)*sizeh;
 

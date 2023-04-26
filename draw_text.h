@@ -48,9 +48,11 @@ void printBitmap(FT_Bitmap bitmap);
 GLuint compileTextShader();
 //void createText(UsableShaderDataInput* shaderData);
 Atlas createTextAtlas(unsigned long start, unsigned long end, const char* font_path, int width_px, int height_px);
-DrawableText createDrawableTextUsingAtlas(unsigned long* text, Atlas* atlas, float x, float y, float sx, float sy);
+DrawableText createDrawableTextUsingAtlas(wchar_t * text, Atlas* atlas, float x, float y, float sx, float sy);
 void drawText(DrawableText * draw, ColorRGBAf color);
+/* useless
 unsigned long * charToULong(const char * text);
 unsigned long * wcharToULong(const short * text);
+*/
 
 #endif
