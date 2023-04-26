@@ -68,6 +68,7 @@ float triangleVertices[] = {
 
 float joystickL[2];
 float joystickR[2];
+float subPxX,subPxY;
 float triggerL, triggerR;
 bool bumperL, bumperR;
 bool start, back, guide;
@@ -179,13 +180,13 @@ int main(int argc,char *argv[])
 
     /** Text **/
     Atlas atlas = createTextAtlas(32, 1<<8, "fonts/Roboto-Bold.ttf", 64, 0);
-    wchar_t* text1 = L"ABCDEFGHIJKLM";
+    wchar_t* text1 = L"ABCDEFGHIJKLM ";
     DrawableText drawableText1 = createDrawableTextWheelUsingAtlas(text1, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
-    wchar_t* text2 = L"NOPQRSTUVWXYZ";
+    wchar_t* text2 = L"NOPQRSTUVWXYZ ";
     DrawableText drawableText2 = createDrawableTextWheelUsingAtlas(text2, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
     wchar_t* text3 = L"0123456789";
     DrawableText drawableText3 = createDrawableTextWheelUsingAtlas(text3, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
-    wchar_t* text4 = L" ()[]{}_\"'#&$@ ";
+    wchar_t* text4 = L"()[]{}_\"'#&$@";
     DrawableText drawableText4 = createDrawableTextWheelUsingAtlas(text4, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
     wchar_t* text5 =L",.!?:;^¨°`~";
     DrawableText drawableText5 = createDrawableTextWheelUsingAtlas(text5, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
@@ -437,11 +438,19 @@ int main(int argc,char *argv[])
 
                 // Mouse movement on left joystick
                 if(fabsf(joystickL[0]) > 0){
-                    mouseMove(copysignf(powf(2,fabs(joystickL[0])*leftSensitivity)-1, joystickL[0]), copysignf(powf(2,fabs(joystickL[1])*leftSensitivity)-1, joystickL[1]));
+                    subPxX += copysignf(powf(2,fabs(joystickL[0])*leftSensitivity)-1, joystickL[0]);
+                    subPxY += copysignf(powf(2,fabs(joystickL[1])*leftSensitivity)-1, joystickL[1]);
+                    mouseMove(subPxX, subPxY);
+                    subPxX = fmodf(subPxX, 1);
+                    subPxY = fmodf(subPxY, 1);
                 }
 
                 if(fabsf(joystickR[1]) > 0){
-                    mouseMove(copysignf(powf(2,fabs(joystickR[0])*rightSensitivity)-1, joystickR[0]), copysignf(powf(2,fabs(joystickR[1])*rightSensitivity)-1, joystickR[1]));
+                    subPxX += copysignf(powf(2,fabs(joystickR[0])*rightSensitivity)-1, joystickR[0]);
+                    subPxY += copysignf(powf(2,fabs(joystickR[1])*rightSensitivity)-1, joystickR[1]);
+                    mouseMove(subPxX, subPxY);
+                    subPxX = fmodf(subPxX, 1);
+                    subPxY = fmodf(subPxY, 1);
                 }
                 
             }else{
