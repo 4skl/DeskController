@@ -84,7 +84,7 @@ GLuint wheel2Div;
 GLuint wheel2DivCount = 16;
 
 OverlaySettings overlay_defaultSettings = {
-    .sizeFactor=20,
+    .sizeFactor=10,
     .backgroundColor={.r=0.3, .g=0.6, .b=0.9},
     .foregroundColor={.r=0.45, .g=0.38, .b=0.4},
     .side=TOP,
@@ -128,20 +128,19 @@ int main(int argc,char *argv[])
     glfwGetFramebufferSize(overlayWindow, &width, &height);
     displayDim.width = (float) width;
     displayDim.height = (float) height;
-
-    //printf("GLFW Version : %s\n", glfwGetVersionString());
-
-    //...glfwSetCursorPos(overlayWindow, 0, 0);
-
-    /*UsableShaderData* overlayBackground = (UsableShaderData*) malloc(sizeof(UsableShaderData));
-    createOverlayBackground(overlayBackground);
-    GLint bgColorUniform = glGetUniformLocation(overlayBackground->shaderProgram, "backgroundColor");
-    GLint fgColorUniform = glGetUniformLocation(overlayBackground->shaderProgram, "foregroundColor");
-    GLint joystickLUniform = glGetUniformLocation(overlayBackground->shaderProgram, "joystickL");
-    GLint joystickRUniform = glGetUniformLocation(overlayBackground->shaderProgram, "joystickR");*/
+    
+    glfwSetJoystickCallback(joystick_callback);
+    glfwSetWindowSizeCallback(overlayWindow, window_size_callback);
+    glfwSetFramebufferSizeCallback(overlayWindow, framebuffer_size_callback);
+    
+    
+    GLFWgamepadstate lastState;
+    
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     /** Wheel **/
-    int dispSize[2] = {(deskInfo->width*overlaySettings.sizeFactor)/100, (deskInfo->width*overlaySettings.sizeFactor)/100};//todo move otherwere to take into account resize and improve
+    int dispSize[2] = {width, height};
     UsableShaderData* overlayWheel1 = (UsableShaderData*) malloc(sizeof(UsableShaderData));
     createOverlayWheel(overlayWheel1);
     GLint overlayWheel1_wheelDimension = glGetUniformLocation(overlayWheel1->shaderProgram, "wheelDimension");
@@ -160,7 +159,7 @@ int main(int argc,char *argv[])
     GLboolean segmentEnabled = true;
 
     /** Scroll **/
-    UsableShaderData* overlayScroll1 = (UsableShaderData*) malloc(sizeof(UsableShaderData));
+    /*UsableShaderData* overlayScroll1 = (UsableShaderData*) malloc(sizeof(UsableShaderData));
     createOverlayScroll(overlayScroll1);
     GLint overlayScroll1_scrollDimension = glGetUniformLocation(overlayScroll1->shaderProgram, "scrollDimension");
     GLint overlayScroll1_horizontal = glGetUniformLocation(overlayScroll1->shaderProgram, "horizontal");
@@ -173,70 +172,30 @@ int main(int argc,char *argv[])
     GLint overlayScroll1_segmentColor = glGetUniformLocation(overlayScroll1->shaderProgram, "segmentColor");
     GLint overlayScroll1_partGradient = glGetUniformLocation(overlayScroll1->shaderProgram, "partGradient");
 
+    glUniform4f(overlayScroll1_segmentColor, 0.0, 1, 0.7, 0.8);*/
 
-    glUniform4f(overlayScroll1_segmentColor, 0.0, 1, 0.7, 0.8);
-    //glUniform4f(overlayScroll1_backgroundColor, 1, 0, 0, 1);
 
     /** Text **/
+    //todo find how to calculate x, y instead of setting arbitrary -0.15, 0.1
     Atlas atlas = createTextAtlas(32, 1<<8, "fonts/Roboto-Bold.ttf", 64, 0);
     wchar_t* text1 = L"ABCDEFGHIJKLM";
-    DrawableText drawableText1 = createDrawableTextWheelUsingAtlas(text1, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    DrawableText drawableText1 = createDrawableTextWheelUsingAtlas(text1, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     wchar_t* text2 = L"NOPQRSTUVWXYZ";
-    DrawableText drawableText2 = createDrawableTextWheelUsingAtlas(text2, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    DrawableText drawableText2 = createDrawableTextWheelUsingAtlas(text2, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     wchar_t* text3 = L"0123456789";
-    DrawableText drawableText3 = createDrawableTextWheelUsingAtlas(text3, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    DrawableText drawableText3 = createDrawableTextWheelUsingAtlas(text3, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     wchar_t* text4 = L" ()[]{}_\"'#&$@ ";
-    DrawableText drawableText4 = createDrawableTextWheelUsingAtlas(text4, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    DrawableText drawableText4 = createDrawableTextWheelUsingAtlas(text4, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     wchar_t* text5 =L",.!?:;^¨°`~";
-    DrawableText drawableText5 = createDrawableTextWheelUsingAtlas(text5, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    DrawableText drawableText5 = createDrawableTextWheelUsingAtlas(text5, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     wchar_t* text6 = L"=-+*/%";
-    DrawableText drawableText6 = createDrawableTextWheelUsingAtlas(text6, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    DrawableText drawableText6 = createDrawableTextWheelUsingAtlas(text6, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     
 
     wchar_t* textCenter = L"AQ0(;+";
-    DrawableText drawableTextCenter = createDrawableTextWheelUsingAtlas(textCenter, &atlas, -.05, 0.43, 0.6/230.0, 0.6/384.0, 0.4, 0.4*230/384);
+    DrawableText drawableTextCenter = createDrawableTextWheelUsingAtlas(textCenter, &atlas, -0.05, 0.05, .6f/width, .6f/height, 0.35, 0.35);
     wheelDivCount = wcslen(textCenter);
     printf("drawableText done\n");
-    /*
-    for(unsigned int i = 0; i<drawableText.vertices_count;i++){
-        printf("%f, ", drawableText.vertices[i]);
-    }
-    printf("\n");
-
-    for(unsigned int i = 0; i<drawableText.elements_count;i++){
-        printf("%i, ", drawableText.elements[i]);
-    }
-    printf("\n");
-    */
-    /*CharacterList cl_text1 = genTextCharacters(text1, "fonts/OpenSans-Bold.ttf", 0, 64);
-    UsableShaderDataInput* overlayText1 = (UsableShaderDataInput*) malloc(sizeof(UsableShaderDataInput));
-    createText(overlayText1);
-    GLint overlayText1_textColor = glGetUniformLocation(overlayText1, "textColor");
-    GLint overlayText1_projection = glGetUniformLocation(overlayText1, "projection");
-
-    glUniform4f(overlayText1_textColor, 0, 1, 0, 1); //set text color to green
-    */
-
-    //glfwSetKeyCallback(window, key_callback);
-    //glfwSetCursorPosCallback(window, cursor_position_callback);
-    glfwSetJoystickCallback(joystick_callback);
-    glfwSetWindowSizeCallback(overlayWindow, window_size_callback);
-    glfwSetFramebufferSizeCallback(overlayWindow, framebuffer_size_callback);
-    //glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
-    
-    
-    GLFWgamepadstate lastState;
-    /*glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE);*/
-    glEnable(GL_BLEND);
-    //glBlendFunc(GL_ONE, GL_ONE);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
-    //Set window size big (mouseMode = false)
-    /*if(smallGap){
-        glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100, 3);
-    }else{*/
-    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100*3/5, (deskInfo->width*overlaySettings.sizeFactor)/100);
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(overlayWindow))
@@ -244,25 +203,11 @@ int main(int argc,char *argv[])
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        /***/
-        //drawView();
-        
-        //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        
-
-        //Draw background
-        /*glUseProgram(overlayBackground->shaderProgram);
-        glUniform2f(joystickLUniform, joystickL[0], -joystickL[1]);
-        glUniform2f(joystickRUniform, joystickR[0], -joystickR[1]);
-        glUniform4f(bgColorUniform, overlaySettings.backgroundColor.r, overlaySettings.backgroundColor.g, overlaySettings.backgroundColor.b, 0.8);
-        glUniform4f(fgColorUniform, overlaySettings.foregroundColor.r, overlaySettings.foregroundColor.g, overlaySettings.foregroundColor.b, 1);
-        glBindVertexArray(overlayBackground->vao);
-        overlayBackground->drawFunction();*/
-
         if(mouseMode){
             // display only a knob, no text, color showing if scroll actived, selection,...
         }else{
-
+            
+            /*
             if(triggerL != -1 || triggerR != -1){
                 glUseProgram(overlayScroll1->shaderProgram);
                 glBindVertexArray(overlayScroll1->vao);
@@ -295,6 +240,7 @@ int main(int argc,char *argv[])
                     overlayScroll1->drawFunction();
                 }
             }
+            */
 
             if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
                 glUseProgram(overlayWheel1->shaderProgram);
@@ -350,14 +296,6 @@ int main(int argc,char *argv[])
                 }
             }
         }
-        
-        /* Draw Text */
-        //unsigned long text[4] = {65UL, 66UL, 67UL, 0UL};
-        /*glUseProgram(overlayText1->shaderProgram);
-        glUniform4f(overlayText1_projection, 0, width, 0, height);
-        overlayText1->drawFunction(&cl_text1);*/
-        //drawTexturesText(text1, "fonts/OpenSans-Bold.ttf", 0, 50, 0, 0, textColor);
-        //drawTexturesText(text1, "fonts/OpenSans-Bold.ttf", 0, 100, 50, 0, textColor);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(overlayWindow);
@@ -471,26 +409,6 @@ int main(int argc,char *argv[])
                         }else if(key != 0){
                             sendChar(key);
                         }
-                        /*
-                        switch(key){
-                            case '*':
-                                key = VK_MULTIPLY;
-                                break;
-                            case '+':
-                                key = VK_ADD;
-                                break;
-                            case '|': 
-                                key = VK_SEPARATOR;
-                                break;
-                            case '-':
-                                key = VK_SUBTRACT;
-                                break;
-                            case '/':
-                                key = VK_DIVIDE;
-                                break;
-                            //VK_DECIMAL	0x6E	Decimal key
-                        }
-                    */
                     }
                 }
 
@@ -560,50 +478,14 @@ int main(int argc,char *argv[])
                 }
             }
 
-
-/* useless
-            float tr,tg,tb;
-            tr = (joystickL[0]+1)/2;
-            tg = (joystickL[1]+1)/2;
-            tb = (joystickR[0]+1)/2;
-            if(colorSelected == BG){
-                overlaySettings.backgroundColor.r = tr;
-                overlaySettings.backgroundColor.g = tg;
-                overlaySettings.backgroundColor.b = tb;
-            }else if(colorSelected == FG){
-                overlaySettings.foregroundColor.r = tr;
-                overlaySettings.foregroundColor.g = tg;
-                overlaySettings.foregroundColor.b = tb;
-            }
-            //if(abs(joystickL[0]) > 0.05  || abs(joystickL[1]) > 0.05){
-            //    printf("part : %i \n", (int) (((atan(joystickL[0]/-joystickL[1])+PI/2)/radians(45.0)))); //TODO
-            //}
-            //printf("%f %f %f\n", tr, tv, tb);
-            if (state.buttons[GLFW_GAMEPAD_BUTTON_A])
-            {
-                printf("A pressed L(%f,%f) R(%f,%f)\n", state.axes[GLFW_GAMEPAD_AXIS_LEFT_X], state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y], state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X], state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y]);
-            }
-            if(state.buttons[GLFW_GAMEPAD_BUTTON_B] && state.buttons[GLFW_GAMEPAD_BUTTON_B] != lastState.buttons[GLFW_GAMEPAD_BUTTON_B]){
-                if(colorSelected == NONE){
-                    colorSelected = BG;
-                }else if(colorSelected == BG){
-                    colorSelected = FG;
-                }else{
-                    colorSelected = NONE;
-                }
-            }
-            if(state.buttons[GLFW_GAMEPAD_BUTTON_X] && state.buttons[GLFW_GAMEPAD_BUTTON_X] != lastState.buttons[GLFW_GAMEPAD_BUTTON_X]){
-                segmentEnabled = !segmentEnabled;
-            }
-            */
             if(state.buttons[GLFW_GAMEPAD_BUTTON_GUIDE] && state.buttons[GLFW_GAMEPAD_BUTTON_GUIDE] != lastState.buttons[GLFW_GAMEPAD_BUTTON_GUIDE]){
-                //need timing
+                
                 mouseMode = !mouseMode;
 
                 if(mouseMode){
-                    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100, 3);
+                    glfwSetWindowSize(overlayWindow, width, 3);
                 }else{
-                    glfwSetWindowSize(overlayWindow, (deskInfo->width*overlaySettings.sizeFactor)/100*3/5, (deskInfo->width*overlaySettings.sizeFactor)/100);
+                    glfwSetWindowSize(overlayWindow, width, height);
                 }
             }
             lastState = state;

@@ -21,7 +21,7 @@ GLFWwindow* createOverlayWindow(GLFWmonitor* monitor, OverlaySettings* settings)
     // todo add when GLFW 3.4 release glfwWindowHint(GLFW_MOUSE_PASSTHROUGH, GLFW_TRUE);
 
     /* Create a windowed mode window and its OpenGL context */
-    overlayWindow = glfwCreateWindow((deskInfo->width*settings->sizeFactor)/100, 3, "DeskController", NULL, NULL); //glfwGetPrimaryMonitor() as 3rd argument for fullscreen
+    overlayWindow = glfwCreateWindow((deskInfo->width*settings->sizeFactor)/100, (deskInfo->width*settings->sizeFactor)/100, "DeskController", NULL, NULL); //glfwGetPrimaryMonitor() as 3rd argument for fullscreen
 
     glfwSetWindowPos(overlayWindow, deskInfo->width/2 - (deskInfo->width*settings->sizeFactor)/100/2, 0);
 
@@ -342,7 +342,8 @@ DrawableText createDrawableTextWheelUsingAtlas(wchar_t * text, Atlas* atlas, flo
         elements[ie+5] = 0+i*4;
 
         AtlasCharacter ac = characters[text[i]-atlas->start];
-        //printf("bl : %f, bt : %f, bw : %f, bh : %f\n", ac.bl, ac.bt, ac.bw, ac.bh);
+
+        // characters in circle around x and y, away by size
         float xpos = x + ac.bl * sx;
         float ypos = -y - (ac.bh - ac.bt) * sy;
         float rv = -((float) i)/text_len*2*PI+PI/2;
@@ -351,13 +352,6 @@ DrawableText createDrawableTextWheelUsingAtlas(wchar_t * text, Atlas* atlas, flo
 
         float w = ac.bw * sx;
         float h = ac.bh * sy;
-
-        /* Advance the cursor to the start of the next character */
-        /*x += ac.ax * sx;
-        y += ac.ay * sy; //? character in line so ? => perhaps in link with the minus sign of ypos above ¯\_(ツ)_/¯
-        */
-       // characters in circle around x and y, away by size
-
 
         float l = xpos;
         float t = (ypos + h);
