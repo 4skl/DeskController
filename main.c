@@ -203,7 +203,7 @@ int main(int argc,char *argv[])
     DrawableText drawableText6 = createDrawableTextWheelUsingAtlas(text6, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     
 
-    wchar_t* textCenter = L"AQ0(;+";
+    wchar_t* textCenter = L"AN0(;+";
     DrawableText drawableTextCenter = createDrawableTextWheelUsingAtlas(textCenter, &atlas, -0.05, 0.05, .6f/width, .6f/height, 0.35, 0.35);
     wheelDivCount = wcslen(textCenter);
     printf("drawableText done\n");
@@ -411,7 +411,7 @@ int main(int argc,char *argv[])
             }else{
 
                 if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
-                    if(lastState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] != bumperR && bumperR || lastState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] != bumperL && bumperL){ // Both bumpers works, useful when using buttons (ctrl,..)
+                    if(lastState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] != bumperR && !bumperR || lastState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] != bumperL && !bumperL){ // Both bumpers works, useful when using buttons (ctrl,..)
                         wchar_t key = 0;
                         if(wheelDiv == 0){
                             key = text1[wheel2Div];
@@ -429,7 +429,7 @@ int main(int argc,char *argv[])
 
                         printf("key %c : %x\n", key, key);
                         //for maj letters
-                        if(key >= 'A' && key <= 'Z'){
+                        if((key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9') || key == ' '){
                              sendKey(key);
                              sendKeyEnd(key);
                         }else if(key != 0){
