@@ -174,6 +174,16 @@ int main(int argc,char *argv[])
 
     glUniform4f(overlayScroll1_segmentColor, 0.0, 1, 0.7, 0.8);*/
 
+    /** Knob **/
+    UsableShaderData* overlayKnob = (UsableShaderData*) malloc(sizeof(UsableShaderData));
+    createOverlayKnob(overlayKnob);
+    GLint overlayKnob_colorIn = glGetUniformLocation(overlayKnob->shaderProgram, "colorIn");
+    GLint overlayKnob_colorOut = glGetUniformLocation(overlayKnob->shaderProgram, "colorOut");
+    GLint overlayKnob_dimension = glGetUniformLocation(overlayKnob->shaderProgram, "dimension");
+
+    glUniform4f(overlayKnob_colorIn, 0.1, 0.6, 0.8, 0.8);
+    glUniform4f(overlayKnob_colorOut, 0, 0, 0, 0);
+    glUniform2f(overlayKnob_dimension, displayDim.width, height/5);
 
     /** Text **/
     //todo find how to calculate x, y instead of setting arbitrary -0.15, 0.1
@@ -205,6 +215,9 @@ int main(int argc,char *argv[])
 
         if(mouseMode){
             // display only a knob, no text, color showing if scroll actived, selection,...
+            glUseProgram(overlayKnob->shaderProgram);
+            glBindVertexArray(overlayKnob->vao);
+            overlayKnob->drawFunction();
         }else{
             
             /*
@@ -447,6 +460,14 @@ int main(int argc,char *argv[])
                 }
             }
 
+            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_B] != buttonB){
+                if(buttonB){
+                    sendKey(VK_MENU);
+                }else{
+                    sendKeyEnd(VK_MENU);
+                }
+            }
+
             if(lastState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT] != buttonDpadLeft){
                 if(buttonDpadLeft){
                     sendKey(VK_LEFT);
@@ -483,7 +504,7 @@ int main(int argc,char *argv[])
                 mouseMode = !mouseMode;
 
                 if(mouseMode){
-                    glfwSetWindowSize(overlayWindow, width, 3);
+                    glfwSetWindowSize(overlayWindow, width, height/5);
                 }else{
                     glfwSetWindowSize(overlayWindow, width, height);
                 }
