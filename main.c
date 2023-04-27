@@ -124,7 +124,7 @@ int main(int argc,char *argv[])
     /* INIT GLEW */
     glewExperimental = GL_TRUE; //? move right after glfw init ?
     glewInit();
-
+    
     int width, height;
     glfwGetFramebufferSize(overlayWindow, &width, &height);
     displayDim.width = (float) width;
