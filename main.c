@@ -190,14 +190,13 @@ int main(int argc,char *argv[])
     //todo find how to calculate x, y instead of setting arbitrary -0.15, 0.1
     Atlas atlas = createTextAtlas(32, 1<<8, "fonts/Roboto-Bold.ttf", 64, 0);
     wchar_t* text1 = L"ABCDEFGHIJKLM ";
-    DrawableText drawableText1 = createDrawableTextWheelUsingAtlas(text1, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    DrawableText drawableText1 = createDrawableTextWheelUsingAtlas(text1, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     wchar_t* text2 = L"NOPQRSTUVWXYZ ";
-    DrawableText drawableText2 = createDrawableTextWheelUsingAtlas(text2, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    DrawableText drawableText2 = createDrawableTextWheelUsingAtlas(text2, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     wchar_t* text3 = L"0123456789";
-    DrawableText drawableText3 = createDrawableTextWheelUsingAtlas(text3, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
+    DrawableText drawableText3 = createDrawableTextWheelUsingAtlas(text3, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     wchar_t* text4 = L"()[]{}_\"'#&$@";
-    DrawableText drawableText4 = createDrawableTextWheelUsingAtlas(text4, &atlas, -.05, 0.43, 1/230.0, 1/384.0, 0.8, 0.8*230/384);
-    
+    DrawableText drawableText4 = createDrawableTextWheelUsingAtlas(text4, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     wchar_t* text5 =L",.!?:;^¨°`~";
     DrawableText drawableText5 = createDrawableTextWheelUsingAtlas(text5, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     wchar_t* text6 = L"=-+*/%";
@@ -264,17 +263,6 @@ int main(int argc,char *argv[])
                 glUniform2f(overlayWheel1_wheelDimension, displayDim.width, displayDim.width);
                 glUniform2f(overlayWheel1_center, displayDim.width/2, displayDim.width/2);
                 glUniform1i(overlayWheel1_segmentEnabled, segmentEnabled);
-                if(fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
-                    float angle = fmodf(atan2f(joystickR[1],joystickR[0]) - PI/2 + PI + 2*PI, 2*PI); //angle in inverse clock cycle from 0 to 2*PI
-                    wheel2Div = (GLuint)(angle / (2*PI/wheel2DivCount));
-                    printf("div %i : %i ; %f\n", wheel2Div, wheel2DivCount, angle);
-                    glUniform1ui(overlayWheel1_divCount, wheel2DivCount);
-                    glUniform2f(overlayWheel1_circleMinMax, 0.5, 1);
-                    glUniform1ui(overlayWheel1_part, wheel2Div);
-                    glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
-                    glUniform4f(overlayWheel1_backgroundColor, 0.1, 0.6, 0.8, 1);
-                    overlayWheel1->drawFunction();
-                }
 
                 if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5){
                     //float angle = atan2(v.y/v.x) + PI; // angle from the point [-1, 0] in reverse clock cycle
@@ -286,27 +274,42 @@ int main(int argc,char *argv[])
                     glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
                     glUniform4f(overlayWheel1_backgroundColor, 0.3, 0.0, 0.0, 1);
                     overlayWheel1->drawFunction();
-
+                    
                     ColorRGBAf textColor = {.r=1, .g=1, .b=1, .a=1.f};
                     drawText(&drawableTextCenter, textColor);
-                    if(wheelDiv == 0){
-                        wheel2DivCount = wcslen(text1);
-                        drawText(&drawableText1, textColor);
-                    }else if(wheelDiv == 1){
-                        wheel2DivCount = wcslen(text2);
-                        drawText(&drawableText2, textColor);
-                    }else if(wheelDiv == 2){
-                        wheel2DivCount = wcslen(text3);
-                        drawText(&drawableText3, textColor);
-                    }else if(wheelDiv == 3){
-                        wheel2DivCount = wcslen(text4);
-                        drawText(&drawableText4, textColor);
-                    }else if(wheelDiv == 4){
-                        wheel2DivCount = wcslen(text5);
-                        drawText(&drawableText5, textColor);
-                    }else if(wheelDiv == 5){
-                        wheel2DivCount = wcslen(text6);
-                        drawText(&drawableText6, textColor);
+
+                    if(fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
+                        glUseProgram(overlayWheel1->shaderProgram);
+                        glBindVertexArray(overlayWheel1->vao);
+                        float angle = fmodf(atan2f(joystickR[1],joystickR[0]) - PI/2 + PI + 2*PI, 2*PI); //angle in inverse clock cycle from 0 to 2*PI
+                        wheel2Div = (GLuint)(angle / (2*PI/wheel2DivCount));
+                        printf("div %i : %i ; %f\n", wheel2Div, wheel2DivCount, angle);
+                        glUniform1ui(overlayWheel1_divCount, wheel2DivCount);
+                        glUniform2f(overlayWheel1_circleMinMax, 0.5, 1);
+                        glUniform1ui(overlayWheel1_part, wheel2Div);
+                        glUniform4f(overlayWheel1_partColor, 0.87, 0.17, 0.85, 1);
+                        glUniform4f(overlayWheel1_backgroundColor, 0.1, 0.6, 0.8, 1);
+                        overlayWheel1->drawFunction();
+
+                        if(wheelDiv == 0){
+                            wheel2DivCount = wcslen(text1);
+                            drawText(&drawableText1, textColor);
+                        }else if(wheelDiv == 1){
+                            wheel2DivCount = wcslen(text2);
+                            drawText(&drawableText2, textColor);
+                        }else if(wheelDiv == 2){
+                            wheel2DivCount = wcslen(text3);
+                            drawText(&drawableText3, textColor);
+                        }else if(wheelDiv == 3){
+                            wheel2DivCount = wcslen(text4);
+                            drawText(&drawableText4, textColor);
+                        }else if(wheelDiv == 4){
+                            wheel2DivCount = wcslen(text5);
+                            drawText(&drawableText5, textColor);
+                        }else if(wheelDiv == 5){
+                            wheel2DivCount = wcslen(text6);
+                            drawText(&drawableText6, textColor);
+                        }
                     }
                 }
             }
