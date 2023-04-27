@@ -256,7 +256,7 @@ int main(int argc,char *argv[])
             }
             */
 
-            if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
+            if(fabsf(joystickL[0]) > 0.3 || fabsf(joystickL[1]) > 0.3 || fabsf(joystickR[0]) > 0.3 || fabsf(joystickR[1]) > 0.3){
                 glUseProgram(overlayWheel1->shaderProgram);
                 glBindVertexArray(overlayWheel1->vao);
 
@@ -264,7 +264,7 @@ int main(int argc,char *argv[])
                 glUniform2f(overlayWheel1_center, displayDim.width/2, displayDim.width/2);
                 glUniform1i(overlayWheel1_segmentEnabled, segmentEnabled);
 
-                if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5){
+                if(fabsf(joystickL[0]) > 0.3 || fabsf(joystickL[1]) > 0.3){
                     //float angle = atan2(v.y/v.x) + PI; // angle from the point [-1, 0] in reverse clock cycle
                     float angle = fmodf(atan2f(joystickL[1],joystickL[0]) - PI/2 + PI + 2*PI, 2*PI); //angle in inverse clock cycle from 0 to 2*PI
                     wheelDiv = (GLuint)(angle / (2*PI/(wheelDivCount)));
@@ -410,7 +410,7 @@ int main(int argc,char *argv[])
                 
             }else{
 
-                if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
+                if(fabsf(joystickL[0]) > 0.3 || fabsf(joystickL[1]) > 0.3 || fabsf(joystickR[0]) > 0.3 || fabsf(joystickR[1]) > 0.3){
                     if(lastState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] != bumperR && !bumperR || lastState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] != bumperL && !bumperL){ // Both bumpers works, useful when using buttons (ctrl,..)
                         wchar_t key = 0;
                         if(wheelDiv == 0){
