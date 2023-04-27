@@ -21,7 +21,7 @@ GLFWwindow* createOverlayWindow(GLFWmonitor* monitor, OverlaySettings* settings)
     // todo add when GLFW 3.4 release glfwWindowHint(GLFW_MOUSE_PASSTHROUGH, GLFW_TRUE);
 
     /* Create a windowed mode window and its OpenGL context */
-    overlayWindow = glfwCreateWindow((deskInfo->width*settings->sizeFactor)/100, 3, "DeskController", NULL, NULL); //glfwGetPrimaryMonitor() as 3rd argument for fullscreen
+    overlayWindow = glfwCreateWindow((deskInfo->width*settings->sizeFactor)/100, (deskInfo->width*settings->sizeFactor)/100, "DeskController", NULL, NULL); //glfwGetPrimaryMonitor() as 3rd argument for fullscreen
 
     glfwSetWindowPos(overlayWindow, deskInfo->width/2 - (deskInfo->width*settings->sizeFactor)/100/2, 0);
 
@@ -310,6 +310,102 @@ void createOverlayScroll(UsableShaderData* shaderData){
     shaderData->drawFunction=drawOverlayScroll;
 }
 
+
+/** Knob **/
+void drawOverlayKnob(){
+    glDrawElements(GL_TRIANGLES, 2*3, GL_UNSIGNED_INT, 0);
+}
+
+GLuint compileOverlayKnob(){
+    //Load shaders
+    GLchar * vertexShaderSource = readShaderFile("shaders/knob.vs");
+    if(vertexShaderSource == NULL) fprintf(stderr, "Can't read shaders/knob.vs\n");
+    GLuint vertexShader = createShader(vertexShaderSource, GL_VERTEX_SHADER);
+    if(vertexShader == 0) fprintf(stderr, "Can't create shaders/knob.vs\n");
+    
+
+    GLchar * fragmentShaderSource = readShaderFile("shaders/knob.fs");
+    if(fragmentShaderSource == NULL) fprintf(stderr, "Can't read shaders/knob.fs\n");
+    GLuint fragmentShader = createShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
+    if(fragmentShader == 0) fprintf(stderr, "Can't create shaders/knob.fs\n");
+
+
+    //Create shader program
+    GLuint shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+
+    glBindFragDataLocation(shaderProgram, 0, "outColor");
+
+    glLinkProgram(shaderProgram);
+
+    //* check compilation errors
+    {
+        GLint status;
+        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &status);
+        if(!status){
+            char buffer[512];
+            glGetProgramInfoLog(shaderProgram, 512, NULL, buffer);
+            fprintf(stderr, "Linking Shader program error : %s\n", buffer);
+        }
+    }
+
+    //not needed, but delete shaders as them have been linked into the program :
+    glDeleteShader(vertexShader);
+    free(vertexShaderSource);
+
+    glDeleteShader(fragmentShader);
+    free(fragmentShaderSource);
+
+    return shaderProgram;
+}
+
+void createOverlayKnob(UsableShaderData* shaderData){
+    shaderData->shaderProgram = compileOverlayKnob();
+    
+    GLfloat overlay_knobShapeVertices[] = {
+        -1, -1,
+        -1, 1,
+        1, 1,
+        1, -1
+    };
+
+    GLuint overlay_knobShapeElements[] = {
+        0, 1, 2,
+        0, 2, 3
+    };
+
+    //Load vertices
+    //GLuint* vao = &(shaderData->vao);
+    GLuint vbo, vao;
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(overlay_knobShapeVertices), overlay_knobShapeVertices, GL_STATIC_DRAW);
+
+    //Load elements
+    GLuint ebo;
+    glGenBuffers(1, &ebo);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(overlay_knobShapeElements), overlay_knobShapeElements, GL_STATIC_DRAW);
+
+    //Link vertex datas to the program
+    GLint posAttrib = glGetAttribLocation(shaderData->shaderProgram, "position");
+    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 2*sizeof(GLfloat), (GLvoid*)0); //3rd arg : normalize input if not floating point depending on the format; 4th arg : stride; 5th arg : offset 
+    glEnableVertexAttribArray(posAttrib);
+    
+    glUseProgram(shaderData->shaderProgram);
+    shaderData->vao = vao;
+    shaderData->drawFunction=drawOverlayKnob;
+}
+
+
+/** Round Text **/
+
 DrawableText createDrawableTextWheelUsingAtlas(wchar_t * text, Atlas* atlas, float x, float y, float sx, float sy, float sizew, float sizeh){
 
     AtlasCharacter* characters = atlas->characters;
@@ -342,7 +438,8 @@ DrawableText createDrawableTextWheelUsingAtlas(wchar_t * text, Atlas* atlas, flo
         elements[ie+5] = 0+i*4;
 
         AtlasCharacter ac = characters[text[i]-atlas->start];
-        //printf("bl : %f, bt : %f, bw : %f, bh : %f\n", ac.bl, ac.bt, ac.bw, ac.bh);
+
+        // characters in circle around x and y, away by size
         float xpos = x + ac.bl * sx;
         float ypos = -y - (ac.bh - ac.bt) * sy;
         float rv = -((float) i)/text_len*2*PI+PI/2;
@@ -351,13 +448,6 @@ DrawableText createDrawableTextWheelUsingAtlas(wchar_t * text, Atlas* atlas, flo
 
         float w = ac.bw * sx;
         float h = ac.bh * sy;
-
-        /* Advance the cursor to the start of the next character */
-        /*x += ac.ax * sx;
-        y += ac.ay * sy; //? character in line so ? => perhaps in link with the minus sign of ypos above ¯\_(ツ)_/¯
-        */
-       // characters in circle around x and y, away by size
-
 
         float l = xpos;
         float t = (ypos + h);
