@@ -19,6 +19,6 @@ void mouseUp(int button);
 
 void mouseClick(int button);
 
-void mouseScroll(int amount);
+void mouseScroll(int amountX, int amountY);
 
 #endif

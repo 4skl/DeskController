@@ -11,8 +11,9 @@
 #define FPS 144
 
 //force use dedicated graphic card //https://stackoverflow.com/questions/16823372/forcing-machine-to-use-dedicated-graphics-card
-__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
-__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+//__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+//__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+// Removed because it was causing the transparent window to be black
 
 Dim2D displayDim;
 
@@ -71,12 +72,13 @@ float joystickR[2];
 float subPxX,subPxY;
 float triggerL, triggerR;
 bool bumperL, bumperR;
+bool thumbL, thumbR;
 bool start, back, guide;
 bool buttonA, buttonB, buttonX, buttonY;
 bool buttonDpadUp, buttonDpadDown, buttonDpadLeft, buttonDpadRight;
 
 bool mouseMode = false;
-float leftSensitivity = 5, rightSensitivity = 3;
+float leftSensitivity = 5, rightSensitivity = 2.6;
 
 GLuint wheelDiv;
 GLuint wheelDivCount = 8;
@@ -96,6 +98,11 @@ int main(int argc,char *argv[])
     /* Initialize the GLFW library */
     if (!glfwInit())
         return -1;
+
+    /* Show glfw version */
+    int major, minor, rev;
+    glfwGetVersion(&major, &minor, &rev);
+    printf("GLFW version: %d.%d.%d\n", major, minor, rev);
 
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 
@@ -197,13 +204,13 @@ int main(int argc,char *argv[])
     DrawableText drawableText3 = createDrawableTextWheelUsingAtlas(text3, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     wchar_t* text4 = L"()[]{}_\"'#&$@";
     DrawableText drawableText4 = createDrawableTextWheelUsingAtlas(text4, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
-    wchar_t* text5 =L",.!?:;^¨°`~";
+    wchar_t* text5 =L";:!?^¨°`~";
     DrawableText drawableText5 = createDrawableTextWheelUsingAtlas(text5, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
-    wchar_t* text6 = L"=-+*/%";
+    wchar_t* text6 = L"=-+*/%,.";
     DrawableText drawableText6 = createDrawableTextWheelUsingAtlas(text6, &atlas, -0.1, 0.1, 1.f/width, 1.f/height, 0.8, 0.8);
     
 
-    wchar_t* textCenter = L"AQ0(;+";
+    wchar_t* textCenter = L"AN0(;=";
     DrawableText drawableTextCenter = createDrawableTextWheelUsingAtlas(textCenter, &atlas, -0.05, 0.05, .6f/width, .6f/height, 0.35, 0.35);
     wheelDivCount = wcslen(textCenter);
     printf("drawableText done\n");
@@ -256,7 +263,7 @@ int main(int argc,char *argv[])
             }
             */
 
-            if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
+            if(fabsf(joystickL[0]) > 0.3 || fabsf(joystickL[1]) > 0.3 || fabsf(joystickR[0]) > 0.3 || fabsf(joystickR[1]) > 0.3){
                 glUseProgram(overlayWheel1->shaderProgram);
                 glBindVertexArray(overlayWheel1->vao);
 
@@ -264,7 +271,7 @@ int main(int argc,char *argv[])
                 glUniform2f(overlayWheel1_center, displayDim.width/2, displayDim.width/2);
                 glUniform1i(overlayWheel1_segmentEnabled, segmentEnabled);
 
-                if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5){
+                if(fabsf(joystickL[0]) > 0.3 || fabsf(joystickL[1]) > 0.3){
                     //float angle = atan2(v.y/v.x) + PI; // angle from the point [-1, 0] in reverse clock cycle
                     float angle = fmodf(atan2f(joystickL[1],joystickL[0]) - PI/2 + PI + 2*PI, 2*PI); //angle in inverse clock cycle from 0 to 2*PI
                     wheelDiv = (GLuint)(angle / (2*PI/(wheelDivCount)));
@@ -341,6 +348,9 @@ int main(int argc,char *argv[])
             bumperL = state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER];
             bumperR = state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER];
 
+            thumbL = state.buttons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB];
+            thumbR = state.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB];
+
             start = state.buttons[GLFW_GAMEPAD_BUTTON_START];
             back = state.buttons[GLFW_GAMEPAD_BUTTON_BACK];
             guide = state.buttons[GLFW_GAMEPAD_BUTTON_GUIDE];
@@ -382,27 +392,16 @@ int main(int argc,char *argv[])
                     }
                 }
 
-                // Mouse scroll on triggers
-                if(triggerR>-1){
-                    mouseScroll((int) -powf(2,5*(triggerR+1)/2));
+                // Mouse scroll on left joystick
+                if(fabsf(joystickL[0]) > 1.f/64 || fabsf(joystickL[1]) > 1.f/64){
+                    mouseScroll((int) copysignf(powf(2,fabsf(joystickL[0])*leftSensitivity)-1, joystickL[0]), (int) -copysignf(powf(2,fabsf(joystickL[1])*leftSensitivity)-1, joystickL[1]));
                 }
 
-                if(triggerL>-1){
-                    mouseScroll((int) powf(2,5*(triggerL+1)/2));
-                }
-
-                // Mouse movement on left joystick
-                if(fabsf(joystickL[0]) > 0){
-                    subPxX += copysignf(powf(2,fabs(joystickL[0])*leftSensitivity)-1, joystickL[0]);
-                    subPxY += copysignf(powf(2,fabs(joystickL[1])*leftSensitivity)-1, joystickL[1]);
-                    mouseMove(subPxX, subPxY);
-                    subPxX = fmodf(subPxX, 1);
-                    subPxY = fmodf(subPxY, 1);
-                }
+                // Mouse movement on right joystick
 
                 if(fabsf(joystickR[1]) > 0){
-                    subPxX += copysignf(powf(2,fabs(joystickR[0])*rightSensitivity)-1, joystickR[0]);
-                    subPxY += copysignf(powf(2,fabs(joystickR[1])*rightSensitivity)-1, joystickR[1]);
+                    subPxX += copysignf(powf(3,fabsf(joystickR[0])*rightSensitivity)-1, joystickR[0]);
+                    subPxY += copysignf(powf(3,fabsf(joystickR[1])*rightSensitivity)-1, joystickR[1]);
                     mouseMove(subPxX, subPxY);
                     subPxX = fmodf(subPxX, 1);
                     subPxY = fmodf(subPxY, 1);
@@ -410,8 +409,8 @@ int main(int argc,char *argv[])
                 
             }else{
 
-                if(fabsf(joystickL[0]) > 0.5 || fabsf(joystickL[1]) > 0.5 || fabsf(joystickR[0]) > 0.5 || fabsf(joystickR[1]) > 0.5){
-                    if(lastState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] != bumperR && bumperR || lastState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] != bumperL && bumperL){ // Both bumpers works, useful when using buttons (ctrl,..)
+                if(fabsf(joystickL[0]) > 0.3 || fabsf(joystickL[1]) > 0.3 || fabsf(joystickR[0]) > 0.3 || fabsf(joystickR[1]) > 0.3){
+                    if(lastState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] != bumperR && !bumperR || lastState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] != bumperL && !bumperL){ // Both bumpers works, useful when using buttons (ctrl,..)
                         wchar_t key = 0;
                         if(wheelDiv == 0){
                             key = text1[wheel2Div];
@@ -429,7 +428,7 @@ int main(int argc,char *argv[])
 
                         printf("key %c : %x\n", key, key);
                         //for maj letters
-                        if(key >= 'A' && key <= 'Z'){
+                        if((key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9') || key == ' '){
                              sendKey(key);
                              sendKeyEnd(key);
                         }else if(key != 0){
@@ -456,30 +455,44 @@ int main(int argc,char *argv[])
             }
 
             // Universal actions (ignore mouse mode)
-
-            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_X] != buttonX){
-                if(buttonX){
-                    sendKey(VK_SHIFT);
-                }else{
-                    sendKeyEnd(VK_SHIFT);
-                }
-            }
-
             if(lastState.buttons[GLFW_GAMEPAD_BUTTON_Y] != buttonY){
                 if(buttonY){
-                    sendKey(VK_CONTROL);
+                    sendKey(VK_TAB);
                 }else{
-                    sendKeyEnd(VK_CONTROL);
+                    sendKeyEnd(VK_TAB);
                 }
             }
 
-            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_B] != buttonB){
-                if(buttonB){
+            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB] != thumbL){
+                if(thumbL){
                     sendKey(VK_MENU);
                 }else{
                     sendKeyEnd(VK_MENU);
                 }
             }
+
+            if(lastState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB] != thumbR){
+                if(thumbR){
+                    sendKey(VK_LWIN);
+                }else{
+                    sendKeyEnd(VK_LWIN);
+                }
+            }
+
+            if(lastState.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] < 0.1 && triggerL > 0.1){
+                sendKey(VK_CONTROL);
+            }
+            if(lastState.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] > 0.1 && triggerL < 0.1){
+                sendKeyEnd(VK_CONTROL);
+            }
+
+            if(lastState.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] < 0.1 && triggerR > 0.1){
+                sendKey(VK_SHIFT);
+            }
+            if(lastState.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] > 0.1 && triggerR < 0.1){
+                sendKeyEnd(VK_SHIFT);
+            }
+
 
             if(lastState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT] != buttonDpadLeft){
                 if(buttonDpadLeft){

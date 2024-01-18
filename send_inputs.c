@@ -124,17 +124,34 @@ void mouseClick(int button){
     mouseUp(button);    
 }
 
-void mouseScroll(int amount){
-    INPUT inputs[1] = {};
-    ZeroMemory(inputs, sizeof(inputs));
+void mouseScroll(int amountX, int amountY){
+    if(amountX != 0){
+        INPUT inputs[1] = {};
+        ZeroMemory(inputs, sizeof(inputs));
 
-    inputs[0].type = INPUT_MOUSE;
-    inputs[0].mi.dwFlags = MOUSEEVENTF_WHEEL;
-    inputs[0].mi.mouseData = amount;
+        inputs[0].type = INPUT_MOUSE;
+        inputs[0].mi.dwFlags = MOUSEEVENTF_HWHEEL;
+        inputs[0].mi.mouseData = amountX;
 
-    UINT uSent = SendInput(ARRAYSIZE(inputs), inputs, sizeof(INPUT));
-    if (uSent != ARRAYSIZE(inputs))
-    {
-        printf("SendInput failed: 0x%x", HRESULT_FROM_WIN32(GetLastError()));
+        UINT uSent = SendInput(ARRAYSIZE(inputs), inputs, sizeof(INPUT));
+        if (uSent != ARRAYSIZE(inputs))
+        {
+            printf("SendInput failed: 0x%x", HRESULT_FROM_WIN32(GetLastError()));
+        }
+    }
+
+    if(amountY != 0){
+        INPUT inputs[1] = {};
+        ZeroMemory(inputs, sizeof(inputs));
+
+        inputs[0].type = INPUT_MOUSE;
+        inputs[0].mi.dwFlags = MOUSEEVENTF_WHEEL;
+        inputs[0].mi.mouseData = amountY;
+
+        UINT uSent = SendInput(ARRAYSIZE(inputs), inputs, sizeof(INPUT));
+        if (uSent != ARRAYSIZE(inputs))
+        {
+            printf("SendInput failed: 0x%x", HRESULT_FROM_WIN32(GetLastError()));
+        }
     }
 }
