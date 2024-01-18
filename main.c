@@ -11,8 +11,9 @@
 #define FPS 144
 
 //force use dedicated graphic card //https://stackoverflow.com/questions/16823372/forcing-machine-to-use-dedicated-graphics-card
-__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
-__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+//__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+//__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+// Removed because it was causing the transparent window to be black
 
 Dim2D displayDim;
 
@@ -97,6 +98,11 @@ int main(int argc,char *argv[])
     /* Initialize the GLFW library */
     if (!glfwInit())
         return -1;
+
+    /* Show glfw version */
+    int major, minor, rev;
+    glfwGetVersion(&major, &minor, &rev);
+    printf("GLFW version: %d.%d.%d\n", major, minor, rev);
 
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 
@@ -387,7 +393,7 @@ int main(int argc,char *argv[])
                 }
 
                 // Mouse scroll on left joystick
-                if(fabsf(joystickL[0]) > 1.f/128 || fabsf(joystickL[1]) > 1.f/128){
+                if(fabsf(joystickL[0]) > 1.f/64 || fabsf(joystickL[1]) > 1.f/64){
                     mouseScroll((int) copysignf(powf(2,fabsf(joystickL[0])*leftSensitivity)-1, joystickL[0]), (int) -copysignf(powf(2,fabsf(joystickL[1])*leftSensitivity)-1, joystickL[1]));
                 }
 
